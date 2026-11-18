@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ppk3A大作 V5 · 深渊熔核</title>
+<title>ppk3A大作 V8 · 熔金臻品</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* game/ui.css — owned by the Game agent. One deliberate dark look (a game viewport): port-authority signage meets a film title card.
@@ -436,6 +436,226 @@ kbd { display: inline-block; font: 500 10px/1 var(--f-mono); color: var(--bone);
 @media (max-width: 680px) {
   .menu .m-chapters { grid-template-columns: 1fr; }
 }
+
+/* 项目介绍（双语说明） */
+.about-copy .ab-head { border-bottom: 1px solid rgba(232,228,218,.16); padding-bottom: 12px; margin-bottom: 14px; }
+.about-copy .ab-head h3 { margin: 0 0 6px; font-family: var(--f-display); font-size: 19px; letter-spacing: .06em; color: #fffdf8; }
+.about-copy .ab-lead { margin: 0 0 10px; font-size: 12.5px; line-height: 1.6; color: var(--bone); }
+.about-copy .ab-zh { color: rgba(232,228,218,.66); }
+.about-copy .ab-cta { margin: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.about-copy .ab-cta a { color: var(--ink); background: var(--signal); padding: 7px 14px; font-weight: 800;
+  text-decoration: none; letter-spacing: .04em; border-radius: 2px; }
+.about-copy .ab-cta a:hover { background: var(--signal-hot); }
+.about-copy .ab-note { font: 500 10.5px/1.5 var(--f-mono); color: rgba(232,228,218,.45); }
+.about-copy h4 { margin: 16px 0 8px; font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--signal); font-weight: 800; }
+.about-copy .ab-list { margin: 0; padding-left: 18px; }
+.about-copy .ab-list li { margin-bottom: 9px; font-size: 12px; line-height: 1.55; color: var(--bone); }
+.about-copy .ab-list li .ab-zh { display: block; margin-top: 2px; }
+.about-copy .ab-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 4px; }
+.about-copy .ab-table th { text-align: left; padding: 6px 8px; font-weight: 700; letter-spacing: .06em;
+  color: var(--signal); border-bottom: 1px solid rgba(232,228,218,.28); white-space: nowrap; }
+.about-copy .ab-table td { padding: 7px 8px; border-bottom: 1px solid rgba(232,228,218,.10); vertical-align: top; }
+.about-copy .ab-table td .ab-zh { display: block; margin-top: 2px; font-size: 10.5px; }
+.about-copy .ab-credit { font-size: 12px; line-height: 1.55; margin: 0 0 9px; color: var(--bone); }
+.about-copy code { background: rgba(232,228,218,.12); padding: 1px 5px; border-radius: 2px; font-size: .92em; }
+
+/* ============================================================================
+   主菜单自适应布局（V8.1）
+   目标：涂装库固定在「开始行动」上方、默认展开、四张卡直接可见；
+         从 2K 到笔记本、以及任意矮/窄窗口都成立。
+
+   实测基线（V8，未改前）：
+     2560x1440 → 内容 965px / 可用 1288px   放得下
+     1920x1080 → 内容 994px / 可用  928px   溢出
+     1366x 768 → 内容 994px / 可用  616px   溢出 378px
+   原 .m-title 是 align-items:flex-end + overflow:auto：内容超高时 flex 把溢出
+   部分甩到视口上方，scrollHeight 仍 == clientHeight，顶部内容既看不见也滚不回来。
+
+   解法分两层：
+     A. 结构：.m-title-main 变成纵向 flex；上半部（标题/简介/选关/难度）收进
+        .m-hero 可滚动区；涂装面板与按钮 flex:none 常驻底部 —— 任何高度下
+        面板与「开始行动」都必然可见可点。
+     B. 节奏：按视口高度分级压缩字号与间距，主流尺寸（含 1080p、1366x768）
+        无需滚动即可看全；极矮窗口才走 A 的滚动兜底。
+   ============================================================================ */
+
+/* 1. 根因修复：标题页可纵向滚动，且内容超高时从顶部开始排，不甩出视口 */
+.menu .m-title {
+  align-items: flex-end;          /* 老浏览器回退 */
+  align-items: safe flex-end;     /* 内容超高时自动退化为顶部对齐 */
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+/* 2. 结构：上半部可伸缩滚动，涂装库 + 按钮常驻底部 dock */
+.menu .m-title-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 100%;
+}
+.menu .m-hero {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.menu .m-hero::-webkit-scrollbar { width: 6px; }
+.menu .m-hero::-webkit-scrollbar-thumb { background: rgba(232, 228, 218, .28); }
+.menu .m-dock {
+  flex: none;
+  min-height: 0;
+  max-width: 100%;
+}
+
+/* 3. 涂装面板：默认展开四卡；宽度随容器自适应，不再死守 660px */
+.skin-panel {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: min(660px, 100%);
+  margin: 10px 0 12px;
+  pointer-events: auto;
+}
+.skin-panel .skin-cur { margin-bottom: 4px; }
+.skin-panel .skin-head { margin-bottom: 6px; }
+.skin-panel .skin-grid { gap: 7px; }
+
+/* 缩略图等比缩放：宽度变化不跳动，也不会被定高压扁 */
+.skin-panel .skin-thumb {
+  width: 100%;
+  height: auto;
+  max-height: none;
+  aspect-ratio: 132 / 62;
+  object-fit: cover;
+  margin-bottom: 5px;
+}
+.skin-panel .skin-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 5px 5px 6px;
+}
+.skin-panel .skin-name,
+.skin-panel .skin-desc { overflow-wrap: anywhere; }
+
+/* 4. 节奏缩放：--m-scale 统一收缩主菜单纵向尺寸 */
+.menu[data-screen="title"] .m-title { --m-scale: 1; }
+
+.menu .m-title .m-word {
+  font-size: clamp(38px, calc(148px * var(--m-scale)), 148px) !important;
+  margin: clamp(4px, calc(12px * var(--m-scale)), 12px) 0
+          clamp(8px, calc(20px * var(--m-scale)), 20px) !important;
+}
+.menu .m-title .m-chapters { margin: calc(10px * var(--m-scale)) 0; gap: calc(10px * var(--m-scale)); }
+.menu .m-title .m-chapters .ch-card { padding: calc(12px * var(--m-scale)) calc(14px * var(--m-scale)); }
+.menu .m-title .m-diff-bar { margin: 0 0 calc(14px * var(--m-scale)); padding: calc(9px * var(--m-scale)) 12px; }
+.menu .m-title .m-diff-bar .md-head { margin-bottom: calc(7px * var(--m-scale)); }
+.menu .m-title .m-diff-bar .md-btn { padding: calc(6px * var(--m-scale)) 4px; }
+.menu .m-title .skin-panel { margin: calc(10px * var(--m-scale)) 0 calc(12px * var(--m-scale)); }
+.menu .m-title .m-actions { margin-top: calc(clamp(16px, 3vh, 28px) * var(--m-scale)); }
+
+/* 5. 分级断点 */
+@media (max-height: 1150px) {
+  .menu[data-screen="title"] .m-title { --m-scale: .92; }
+}
+/* 1080p 笔记本/台式：收起章节说明与简介，标题巨字按视口高收敛 */
+@media (max-height: 1000px) {
+  .menu[data-screen="title"] .m-title { --m-scale: .88; }
+  .menu .m-title .m-word { font-size: clamp(38px, 10.5vh, 136px) !important; }
+  .menu .m-title .m-chapters .ch-d { display: none; }
+  .menu .m-title .m-premise { display: none; }
+  .menu .m-title .ch-k { font-size: 10.5px; }
+  .menu .m-title .ch-t { font-size: 14px; }
+}
+/* 1280x720 / 1366x768 一档：选关改四列一行，卡片去描述 */
+@media (max-height: 820px) {
+  .menu[data-screen="title"] .m-title { --m-scale: .84; }
+  .menu .m-title .m-word { font-size: clamp(34px, 9.5vh, 110px) !important; }
+  .menu .m-title .m-chapters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .menu .m-title .m-chapters .ch-t { font-size: 12px; line-height: 1.25; }
+  .menu .m-title .m-chapters .ch-k { font-size: 9.5px; letter-spacing: .02em; }
+  .menu .m-title .m-chapters .ch-k .ch-badge { display: none; }
+  .menu .m-title .m-diff-bar .md-desc { display: none; }
+  .menu .m-title .skin-panel .skin-desc { display: none; }
+}
+/* 更矮：继续收，副标题、难度标题、面板提示让位 */
+@media (max-height: 640px) {
+  .menu[data-screen="title"] .m-title { --m-scale: .76; }
+  .menu .m-title .m-word { font-size: clamp(30px, 8.6vh, 92px) !important; }
+  .menu .m-title .m-word .m-subtitle { display: none; }
+  .menu .m-title .m-diff-bar .md-title { display: none; }
+  .menu .m-title .skin-panel .skin-hint { display: none; }
+  .menu .m-title .m-diff-bar .md-btn { padding: 4px 2px; font-size: 11px; }
+}
+@media (max-height: 500px) {
+  .menu[data-screen="title"] .m-title { --m-scale: .70; }
+  .menu .m-title .m-eyebrow { display: none; }
+  .menu .m-title .m-word { font-size: clamp(26px, 8vh, 72px) !important; }
+  .skin-panel .skin-card { min-height: 44px; }
+  .skin-panel .skin-thumb { aspect-ratio: auto; height: 22px; }
+}
+
+/* 6. 宽度自适应：窄屏四卡降两列/一列，绝不横向溢出 */
+@media (max-width: 900px) {
+  .menu .m-title .m-chapters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 680px) {
+  .skin-panel { max-width: 100%; }
+  .skin-panel .skin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .menu .m-title .m-chapters { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .skin-panel .skin-grid { grid-template-columns: 1fr; }
+}
+
+/* 7. 收尾：折叠态不额外撑高 */
+.menu .m-dock > .skin-panel:last-child { margin-bottom: 0; }
+.menu .m-dock > .m-actions { margin-bottom: 0; }
+.skin-panel.skin-collapsed { margin-bottom: calc(8px * var(--m-scale, 1)); }
+
+
+/* 涂装库（武器皮肤选择面板） */
+.skin-panel { position: relative; z-index: 3; margin: 8px 0 10px; max-width: 660px; }
+.skin-cur { display: block; font: 600 11px/1.4 var(--f-mono); letter-spacing: .06em;
+  color: var(--signal-hot); margin-bottom: 3px; }
+.skin-panel.skin-collapsed .skin-grid { display: none; }
+.skin-panel .skin-head { margin-bottom: 5px; }
+.skin-panel.skin-collapsed .skin-head { margin-bottom: 0; padding: 7px 9px;
+  background: rgba(11,14,19,.86); border: 1px solid rgba(232,228,218,.22);
+  border-left: 3px solid var(--signal); }
+.skin-panel.skin-collapsed .skin-head:hover { background: rgba(24,31,40,.95); border-color: rgba(255,179,71,.7); }
+/* 紧凑卡片：矮视口下也能四张一字排开而不额外撑高 */
+.skin-panel .skin-grid { gap: 5px; }
+.skin-panel .skin-card { padding: 4px 4px 5px; }
+.skin-panel .skin-thumb { margin-bottom: 3px; max-height: 34px; object-fit: cover; }
+.skin-panel .skin-name { font-size: 11px; margin-bottom: 1px; }
+.skin-panel .skin-desc { font-size: 9px; line-height: 1.3; }
+@media (max-height: 720px) {
+  .skin-panel .skin-desc { display: none; }
+  .skin-panel .skin-thumb { max-height: 26px; }
+}
+.skin-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+.skin-title { font: 700 11px/1 var(--f-label); letter-spacing: .2em; text-transform: uppercase; color: var(--signal); }
+.skin-hint { font: 500 10.5px/1 var(--f-mono); letter-spacing: .04em; color: rgba(232,228,218,.5); }
+.skin-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+.skin-card {
+  -webkit-appearance: none; appearance: none; text-align: left; padding: 6px 6px 7px;
+  background: rgba(11,14,19,.86); border: 1px solid rgba(232,228,218,.22);
+  color: var(--bone); font-family: var(--f-label); cursor: pointer; pointer-events: auto;
+  transition: border-color .15s ease, background .15s ease, transform .12s ease, box-shadow .15s ease;
+}
+.skin-card:hover { background: rgba(24,31,40,.95); border-color: rgba(255,179,71,.7); transform: translateY(-1px); }
+.skin-card.on { border-color: var(--signal); background: linear-gradient(135deg, rgba(255,154,56,.2), rgba(14,18,24,.94)); box-shadow: 0 4px 16px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,179,71,.3); }
+.skin-thumb { display: block; width: 100%; height: auto; border: 1px solid rgba(232,228,218,.16); margin-bottom: 5px; }
+.skin-name { display: block; font-size: 12px; font-weight: 800; letter-spacing: .03em; color: #fffdf8; margin-bottom: 2px; }
+.skin-card.on .skin-name { color: var(--signal-hot); }
+.skin-desc { display: block; font-size: 10px; line-height: 1.35; color: rgba(232,228,218,.62); }
+@media (max-width: 680px) { .skin-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* 武器栏与投掷物 HUD */
 .h-arsenal {
@@ -983,6 +1203,211 @@ kbd { display: inline-block; font: 500 10px/1 var(--f-mono); color: var(--bone);
   .menu .m-diff-bar .md-seg {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* ============================================================================
+   右下角军械栏 · 图形 UI（V8.2）
+   ----------------------------------------------------------------------------
+   问题：原布局 7 个横向槽位、每格带中文全名，实测固定宽度 731px：
+         2542px 视口占 28.8%，1348px 视口占 54.2% —— 横向铺满半个屏幕。
+   改法：等宽图标卡 46×40、数字角标、名称只在选中项以气泡显示，整条约 346px。
+         图标为内联 SVG 描边，零外部资源。
+   ============================================================================ */
+
+.h-arsenal {
+  right: var(--gr);
+  bottom: calc(20px + var(--sab) + 132px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+/* ---- 图标行 ---- */
+.h-slots {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.h-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 40px;
+  padding: 0;
+  background: rgba(11, 13, 15, .62);
+  border: 1px solid rgba(232, 228, 218, .18);
+  color: var(--bone-dim);
+  transition: border-color .14s, background .14s, transform .14s, opacity .14s;
+}
+
+/* 数字键角标：左上角，绝对定位不占宽度 */
+.h-slot kbd {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font: 700 8.5px/1 var(--f-mono);
+  color: rgba(232, 228, 218, .42);
+  background: none;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+  letter-spacing: 0;
+}
+
+/* 图标：统一 32:20 比例，描边风格 */
+.h-slot .s-ico {
+  display: block;
+  width: 32px;
+  height: 20px;
+  margin-top: 3px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .85;
+}
+.h-slot.on .s-ico { opacity: 1; }
+
+/* 名称：绝对定位气泡，只有选中项显示，不参与布局 */
+.h-slot .s-name {
+  position: absolute;
+  right: -1px;
+  bottom: calc(100% + 5px);
+  white-space: nowrap;
+  font: 700 10.5px/1 var(--f-label);
+  letter-spacing: .05em;
+  color: var(--signal-hot);
+  padding: 3px 6px;
+  background: rgba(8, 10, 12, .92);
+  border-left: 2px solid var(--signal);
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity .16s, transform .16s;
+  pointer-events: none;
+  z-index: 2;
+}
+.h-slot.on .s-name { opacity: 1; transform: translateY(0); }
+
+/* 选中态 */
+.h-slot.on {
+  background: linear-gradient(180deg, rgba(255, 179, 71, .24), rgba(11, 13, 15, .74));
+  border-color: var(--signal);
+  color: var(--signal-hot);
+  transform: translateY(-2px);
+}
+.h-slot.on kbd { color: var(--signal); }
+
+/* 手雷：破片=琥珀，EMP=青蓝 */
+.h-slot.gren { border-color: rgba(255, 179, 71, .3); }
+.h-slot.gren.on { border-color: var(--signal); }
+.h-slot.gren.emp { border-color: rgba(66, 212, 255, .32); color: rgba(108, 224, 255, .82); }
+.h-slot.gren.emp.on {
+  background: linear-gradient(180deg, rgba(56, 210, 255, .26), rgba(11, 13, 15, .74));
+  border-color: #42d4ff;
+  color: #9beeff;
+}
+.h-slot.gren.emp.on kbd { color: #42d4ff; }
+.h-slot.gren.emp.on .s-name { color: #9beeff; border-left-color: #42d4ff; }
+
+/* 弧光投射器 */
+.h-slot.arc { border-color: rgba(73, 216, 255, .4); color: rgba(73, 216, 255, .82); }
+.h-slot.arc.on {
+  background: linear-gradient(180deg, rgba(73, 216, 255, .24), rgba(11, 13, 15, .74));
+  border-color: #49d8ff;
+  color: #dff6ff;
+}
+.h-slot.arc.on kbd { color: #49d8ff; }
+.h-slot.arc.on .s-name { color: #dff6ff; border-left-color: #49d8ff; }
+
+/* 未解锁：整格变虚 + 右下角挂锁 */
+.h-slot.locked { opacity: .34; filter: saturate(.2); }
+.h-slot.locked::before {
+  content: "";
+  position: absolute;
+  right: 5px;
+  bottom: 11px;
+  width: 7px;
+  height: 5px;
+  border: 1.4px solid rgba(232, 228, 218, .85);
+  border-bottom: 0;
+  border-radius: 3.5px 3.5px 0 0;
+}
+.h-slot.locked::after {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 9px;
+  height: 7px;
+  border: 1.4px solid rgba(232, 228, 218, .85);
+  border-radius: 1px;
+}
+
+/* 弹药耗尽 */
+.h-slot.empty { opacity: .38; }
+
+/* 手雷计数：右下角 */
+.h-slot i.gcnt {
+  position: absolute;
+  right: 3px;
+  bottom: 2px;
+  font: 800 9.5px/1 var(--f-mono);
+  font-style: normal;
+  color: var(--signal);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .95);
+}
+.h-slot.gren.emp i.gcnt { color: #6ce0ff; }
+.h-slot.empty i.gcnt { color: rgba(232, 228, 218, .4); }
+
+/* ---- 投掷提示条 ---- */
+.h-throw {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 346px;
+  padding: 3px 8px;
+  background: rgba(11, 13, 15, .72);
+  border: 1px solid rgba(232, 228, 218, .16);
+  border-right: 2px solid var(--signal);
+  font-size: 10.5px;
+  color: var(--bone);
+  white-space: nowrap;
+}
+.h-throw.emp { border-right-color: #42d4ff; }
+.h-throw .th-key {
+  flex: none;
+  font: 700 9.5px/1.2 var(--f-mono);
+  padding: 1px 4px;
+  background: rgba(255, 255, 255, .1);
+  color: var(--signal);
+}
+.h-throw.emp .th-key { color: #42d4ff; }
+.h-throw .th-name { overflow: hidden; text-overflow: ellipsis; }
+.h-throw .th-cnt { font: 800 11px/1 var(--f-mono); }
+.h-throw .th-alt { flex: none; font-size: 9.5px; color: var(--bone-dim); }
+
+/* ---- 尺寸降级 ---- */
+@media (max-width: 1180px) {
+  .h-slot { width: 40px; height: 35px; }
+  .h-slot .s-ico { width: 27px; height: 17px; }
+  .h-throw { max-width: 310px; font-size: 10px; }
+  .h-throw .th-alt { display: none; }
+}
+@media (max-width: 900px) {
+  .h-slot { width: 34px; height: 31px; }
+  .h-slot .s-ico { width: 23px; height: 15px; margin-top: 2px; }
+  .h-slot .s-name { font-size: 9.5px; }
+  .h-throw .th-name { display: none; }
+}
+/* 竖屏窄屏交给触屏虚拟按键，沿用原逻辑 */
+@media (max-width: 760px) {
+  .h-arsenal { display: none; }
 }
 
 </style>
@@ -6767,7 +7192,6 @@ vObjP = position; vONrm = normal; vWNrm = normalize(mat3(modelMatrix) * normal);
           <button class="btn" data-act="about">项目介绍</button>
           <button class="btn m-only-narrow" data-act="controls">操作说明</button>
         </div>
-        <p class="m-note">使用 Fable5.2 自主研发 · 国产第一人称射击游戏 · 开发体验版</p>
       </div>
       <aside class="m-legend" aria-label="操作速览">
         <div><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动</span><span><kbd>鼠标</kbd> 视角</span><span><kbd>左键</kbd> 开火</span><span><kbd>右键</kbd> 瞄准</span><span><kbd>R</kbd> 换弹</span></div>
@@ -6818,12 +7242,50 @@ vObjP = position; vONrm = normal; vWNrm = normalize(mat3(modelMatrix) * normal);
         <button class="btn small" data-act="close-panel">关闭</button>
       </header>
       <div class="panel-b about-copy" data-pane="about" hidden>
-        <h3>ppk3A大作 · V3 防穿模精修版</h3>
-        <p><strong>V3 防穿模专项升级：</strong>重构飞行敌军（机械飞鸥与鹰眼浮游炮）三维连续圆柱体积碰撞退穿求解器、集装箱堆垛智能前瞻拉升翻越、场外装饰箱区空域硬约束及盒内视线穿透修复，并完整保留双章节战役、四式军械库、双模手雷、小地图、自由难度开关与“ppk巨像”泰坦 Boss 决战！</p>
-        <p>各位老师、同学好！宣传一下我们最近使用 Fable5.2 自主研发的一款国产 3A FPS 大作——<strong>《ppk》</strong>！🎮</p>
-        <p>我们致力于打造具有中国特色的高品质第一人称射击游戏，融合沉浸式战斗体验、创新玩法与次世代视觉表现，探索国产 FPS 游戏的更多可能性。</p>
-        <p>目前项目仍在持续开发与优化中，距离国际顶尖 3A 水准还有一定差距。</p>
-        <p>非常欢迎各位老师、同学关注、体验并提出宝贵建议，期待与游戏开发、图形学及 AI 方向的朋友深入交流！🐱🔥</p>
+        <div class="ab-head">
+          <h3>ppk · 3A大作</h3>
+          <p class="ab-lead"><strong>A single-file, zero-dependency sci-fi harbor tactical FPS that runs in any modern browser.</strong><br>
+          <span class="ab-zh">纯单文件、零外部依赖的硬核科幻港区战术第一人称射击游戏，浏览器打开即玩。</span></p>
+          <p class="ab-cta"><a href="https://keaideppk.github.io/ppk-3a-fps/" target="_blank" rel="noopener">▶ Play Online · 在线游玩</a>
+          <span class="ab-note">No install · No download · No external assets<br>无需安装 · 无需下载 · 不加载任何外部资源</span></p>
+        </div>
+
+        <h4>Features · 核心特性</h4>
+        <ul class="ab-list">
+          <li><b>Four-chapter campaign · 四章战役</b> — Free chapter select, each with its own layout, hazards and boss.<br><span class="ab-zh">自由选关，每章独立地形、环境危害与 Boss。</span></li>
+          <li><b>Seven-slot arsenal · 七槽位军械库</b> — Four hand-built firearms plus frag / EMP grenades, hot-swappable mid-combat.<br><span class="ab-zh">四把精工枪械 + 破片/EMP 手雷，战中随时切换。</span></li>
+          <li><b>GPU-skinned enemies · 蒙皮敌军</b> — Multi-bone hard-surface models with per-part hit detection.<br><span class="ab-zh">多骨骼硬表面模型，支持部位命中判定。</span></li>
+          <li><b>Multi-phase bosses · 多阶段 Boss</b> — Destructible parts, shield breaks, forced core exposure, enrage phases.<br><span class="ab-zh">部位可破坏、护盾击碎、核心强制暴露、狂暴阶段。</span></li>
+          <li><b>Live tactical radar · 实时战术雷达</b> — Rotating minimap with threat typing and off-screen edge indicators.<br><span class="ab-zh">旋转小地图，区分兵种并带屏外贴边指引。</span></li>
+          <li><b>Free difficulty tuning · 自由难度调节</b> — Five presets, five continuous sliders, plus a god-mode toggle.<br><span class="ab-zh">五档预设 + 五项无级滑块 + 不死护体。</span></li>
+          <li><b>Zero dependencies · 零依赖</b> — One <code>index.html</code>. No CDN, no build step, no runtime network calls.<br><span class="ab-zh">单个文件，无 CDN、无构建步骤、运行期零网络请求。</span></li>
+        </ul>
+
+        <h4>Campaign · 战役</h4>
+        <table class="ab-table">
+          <thead><tr><th>#</th><th>Chapter · 章节</th><th>Objective · 任务</th><th>Boss</th></tr></thead>
+          <tbody>
+            <tr><td>01</td><td>Berth 04 Blockade<br><span class="ab-zh">四号泊位封锁线</span></td><td>Sever 3 uplink relays, then extract<br><span class="ab-zh">切断 3 处上行中继后登艇撤离</span></td><td>—</td></tr>
+            <tr><td>02</td><td>Deep-Sea Nexus<br><span class="ab-zh">远洋巨轮与中枢决战</span></td><td>Disable 2 shield generators<br><span class="ab-zh">瘫痪 2 座护盾发生器</span></td><td>ppk Colossus<br><span class="ab-zh">ppk巨像</span></td></tr>
+            <tr><td>03</td><td>Dockyard Assembly<br><span class="ab-zh">船坞总装厂</span></td><td>Cut 3 power feeds<br><span class="ab-zh">切断三段供电</span></td><td>Titan Assembly<br><span class="ab-zh">泰坦总装体</span></td></tr>
+            <tr><td>04</td><td>Abyssal Geothermal Ring<br><span class="ab-zh">深渊地热环站</span></td><td>Cut 3 geothermal feeds<br><span class="ab-zh">切断 3 处地热供给锁</span></td><td>ppk Abyss Wyrm<br><span class="ab-zh">ppk渊龙</span></td></tr>
+          </tbody>
+        </table>
+
+        <h4>Technical Notes · 技术说明</h4>
+        <ul class="ab-list">
+          <li><b>Rendering · 渲染</b> — WebGL 2 with a custom post stack: temporal upscale, SSAO, volumetric sun shafts, bloom, motion blur, filmic tonemapping.<br><span class="ab-zh">自研后期管线：时域上采样、SSAO、体积光、辉光、动态模糊、电影级色调映射。</span></li>
+          <li><b>Materials · 材质</b> — Fully procedural PBR generated at boot. Zero image assets.<br><span class="ab-zh">启动时程序化生成 PBR 贴图，零图片资源。</span></li>
+          <li><b>Physics · 物理</b> — AABB world, capsule sweep, A* nav grid, continuous 3D sub-stepped resolver for flying units.<br><span class="ab-zh">AABB 碰撞 + 胶囊扫掠 + A* 导航，飞行单位连续三位子步进退穿。</span></li>
+          <li><b>Audio · 音频</b> — 100% synthesized Web Audio, generated at load time.<br><span class="ab-zh">100% 程序化合成音频，加载时实时生成。</span></li>
+        </ul>
+
+        <h4>Credits · 来源与致谢</h4>
+        <p class="ab-credit"><b>Base project · 基底来源</b> — Built upon the <b>Claude official demo</b>.<br><span class="ab-zh">本项目原版基底源自 Claude 官方示例。</span></p>
+        <p class="ab-credit"><b>Secondary development · 二次开发</b> — Extended with the <b>Carbon model</b>.<br><span class="ab-zh">在此之上使用 Carbon 模型进行了深度二次开发。</span></p>
+
+        <h4>License · 许可</h4>
+        <p class="ab-credit"><b>For study, testing and technical exchange only.</b><br><span class="ab-zh">本项目仅供学习、测试与技术交流使用。</span></p>
       </div>
       <div class="panel-b" data-pane="settings">
         <div class="row"><label id="l-q">画面质量</label>
@@ -6845,7 +7307,54 @@ vObjP = position; vONrm = normal; vWNrm = normalize(mat3(modelMatrix) * normal);
     </div>
 
     <div class="loc-card" aria-hidden="true"><i></i><b>ppk港区 · 四号泊位 · 05:42</b><span>ppk突击小队 · 单兵行动，无人支援</span></div>
-  `,t.appendChild(s);let o=U=>s.querySelector(U),r=U=>[...s.querySelectorAll(U)],a=o(".panel"),l=o(".loc-card"),c=U=>s.querySelector(`[data-f="${U}"]`),u=o("#s-sens"),h=o("#s-vol"),f=o("#s-fov"),p="none",d=null;function v(U){if((!U||U==="sens")&&(i.input.sensitivity=n.sens),(!U||U==="invertY")&&(i.input.invertY=n.invertY),!U||U==="volume")try{i.audio&&i.audio.setVolume&&i.audio.setVolume(n.volume)}catch(T){console.error(T)}if((!U||U==="fov")&&i.player&&i.player.setFov&&i.player.setFov(n.fov),U==="quality"||!U&&n.quality!=="auto"&&!i.params.shot&&!i.params.q&&n.quality!==(i.quality&&i.quality.name)){let T=Pr[n.quality];if(T)try{i.render&&i.render.setQuality?i.render.setQuality({...T}):i.quality={...T}}catch(D){console.error("[game] setQuality failed",D)}}}function g(){let U=n.quality==="auto"?i.quality&&i.quality.name:n.quality;for(let D of r(".seg button"))D.setAttribute("aria-pressed",String(D.dataset.q===U));u.value=n.sens,h.value=Math.round(n.volume*100),f.value=n.fov,o('[data-o="sens"]').textContent=n.sens.toFixed(2)+"\xD7",o('[data-o="vol"]').textContent=Math.round(n.volume*100)+"%",o('[data-o="fov"]').textContent=Math.round(n.fov)+"\xB0";let T=o('[data-act="invert"]');T.setAttribute("aria-pressed",String(n.invertY)),T.querySelector("span").textContent=n.invertY?"开启":"关闭",c("qnote").textContent=n.quality==="auto"?`已根据设备自动选择画质（${({low:"低",medium:"中",high:"高",ultra:"极高"})[U]||"默认"}），运行不流畅时可降低画质。`:"画质设置立即生效；阴影和反射需要片刻重新生成。"}u.addEventListener("input",()=>{n.sens=+u.value,v("sens"),g(),Wf(n)}),h.addEventListener("input",()=>{n.volume=+h.value/100,v("volume"),g(),Wf(n)}),f.addEventListener("input",()=>{n.fov=+f.value,v("fov"),g(),Wf(n)});let x=o('[data-row="fs"]'),y=o("#fs-t"),b=()=>document.fullscreenElement||document.webkitFullscreenElement||null,m=document.getElementById("app")||document.documentElement;m&&(m.requestFullscreen||m.webkitRequestFullscreen)&&document.fullscreenEnabled!==!1&&document.webkitFullscreenEnabled!==!1||(x.hidden=!0);function _(){y.textContent="当前环境不支持全屏"}function M(){try{if(b()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}let U=(m.requestFullscreen||m.webkitRequestFullscreen).call(m);U&&U.catch&&U.catch(_)}catch{_()}}let E=()=>{y.textContent=b()?"退出全屏":"进入全屏"};document.addEventListener("fullscreenchange",E),document.addEventListener("webkitfullscreenchange",E);function w(U){d=document.activeElement,a.hidden=!1,s.classList.add("panel-open"),z(U||"settings");try{a.focus({preventScroll:!0})}catch{}}function S(){return a.hidden?!1:(a.hidden=!0,s.classList.remove("panel-open"),d&&d.focus&&s.contains(d)?d.focus():H(),!0)}function z(U){for(let T of r(".tab"))T.setAttribute("aria-selected",String(T.dataset.tab===U));for(let T of r(".panel-b"))T.hidden=T.dataset.pane!==U}function H(){let U=s.querySelector(`.m-screen[data-s="${p}"] .btn.primary`);if(U)try{U.focus({preventScroll:!0})}catch{}}s.addEventListener("click",U=>{let T=U.target.closest("button");if(!T||!s.contains(T))return;if(i.events.emit("ui:click",{}),T.dataset.q){n.quality=T.dataset.q,v("quality"),g(),Wf(n);return}if(T.dataset.tab){z(T.dataset.tab);return}let D=T.dataset.act;D==="about"?w("about"):D==="settings"?w("settings"):D==="controls"?w("controls"):D==="close-panel"?S():D==="invert"?(n.invertY=!n.invertY,v("invertY"),g(),Wf(n)):D==="fullscreen"?M():D&&e[D]&&e[D](U)}),s.addEventListener("mouseover",U=>{let T=U.target.closest("button");T&&U.relatedTarget&&!T.contains(U.relatedTarget)&&i.events.emit("ui:hover",{})}),s.addEventListener("keydown",U=>{if(U.code==="Escape"&&!a.hidden&&(S(),U.stopPropagation(),U.preventDefault()),U.code==="Tab"&&!a.hidden){let T=[...a.querySelectorAll("button, input")].filter(G=>G.offsetParent!==null);if(!T.length)return;let D=T[0],C=T[T.length-1];U.shiftKey&&document.activeElement===D?(C.focus(),U.preventDefault()):!U.shiftKey&&document.activeElement===C&&(D.focus(),U.preventDefault())}});let O=U=>(U=Math.max(0,Math.floor(U)),String(Math.floor(U/60)).padStart(2,"0")+":"+String(U%60).padStart(2,"0")),q={root:s,settings:n,fmtTime:O,get screen(){return p},get panelOpen(){return!a.hidden},closePanel:S,show(U){U!==p&&(p=U,s.dataset.screen=U,S(),s.classList.toggle("open",U!=="none"),U!=="none"?(g(),setTimeout(H,30)):document.activeElement&&s.contains(document.activeElement)&&document.activeElement.blur())},locationCard(U){l.classList.toggle("on",!!U)},setLookMode(U){c("lookmode").textContent=U||""},setDead({time:U,relays:T,total:D}){c("dead-time").textContent=O(U),c("dead-relays").textContent=`${T}/${D}`},setDebrief({time:U,accuracy:T,kills:D,retries:C,rating:G}){c("time").textContent=O(U),c("acc").textContent=T==null?"\u2014":Math.round(T*100)+"%",c("kills").textContent=String(D),c("retries").textContent=String(C),c("rating").textContent=G},applySettings:v};return g(),q}var Yi={introSeconds:3.5,retryIntroSeconds:1.3,interactRange:2.2,interactFacing:.45,cutSeconds:2.4,patrol:{gull:2,hound:1},waves:[{gull:3,hound:1},{gull:3,hound:2},{gull:4,hound:3}],maxAlive:11,spawnStagger:.85,spawnFar:18,pursuitEvery:7,pursuitMinAlive:4,pursuitExtra:5,titleSpeed:1.15,titleFov:50},jC=["北方","东北方","东方","东南方","南方","西南方","西方","西北方"],_l={intro:"ppk队员，这里是指挥中心。港区主控已封锁泊位。切断堆场、仓库、码头的三处中继。",contact:"你已被发现！空中有机械飞鸥，地面有机械猎犬。消灭它们。",cut:["第一处中继已断开。敌方已察觉，机械守卫正在赶来。","第二处中继已断开。敌方正全力围攻，小心应对。"],all:"三处中继全部断开！撤离艇在码头南端的舷梯旁，快撤！",low:"伤势严重！找掩体躲避，稍作恢复。",done:"ppk队员已登船，港区封锁解除。干得漂亮！"};function mM(i){let e=i.render&&i.render.post||{},t=typeof e.saturation=="number"?e.saturation:1,n=i.player,s=i.level,o=i.hud,r=i.input,a=(P,V,...Y)=>{try{if(P&&typeof P[V]=="function")return P[V](...Y)}catch(L){console.error(`[game] ${V} threw`,L)}},l=pM(i,{deploy(){a(i.audio,"resume"),r.requestLock(),U({})},resume(){j(!0)},restart(){a(i.audio,"resume"),r.requestLock(),c.retries++,U({quick:!0,keepRetries:!0})},retry(){a(i.audio,"resume"),r.requestLock(),c.retries++,U({quick:!0,keepRetries:!0})},redeploy(){a(i.audio,"resume"),r.requestLock(),U({quick:!0})}});l.applySettings();let c={time:0,retries:0,relays:[],cut:0,allCut:!1,queue:[],waveHot:0,alertT:0,pursuitT:0,pursuitLeft:0,contactSaid:!1,lowSaid:!1,extractHint:0,intensity:.15,used:new Map},u=0,h=Yi.introSeconds,f=!1,p=!1,d=0,v=0,g=!1,x="",y=.8,b=new W,m=new W,A=()=>s&&s.objectives||[],_={state:"title",flow:Yi,run:c,menus:l,refreshCinematic:w,toTitle(){M("title")},start(P={}){U({skipIntro:!!P.skipIntro,quick:!!P.quick})},pause(){G()},resume(){j(!1)},update:B,debugCut(){let P=c.relays.find(V=>!V.cut);P&&me(P)}};function M(P){let V=_.state;P!==V&&(_.state=P,u=0,i.events.emit("game:state",{state:P,prev:V}))}let E={pos:[],look:[],len:1,t:0};function w(){let P=s&&s.cinematicPath||[];if(E.pos=P.map(Y=>new W(...Y.pos)),E.look=P.map(Y=>new W(...Y.look)),E.pos.length<2){let Y=s&&s.playerStart&&s.playerStart.pos||new W;E.pos=[new W(Y.x,2.2,Y.z),new W(Y.x+8,2,Y.z)],E.look=[new W(Y.x+30,2.5,Y.z-2),new W(Y.x+40,3,Y.z-2)]}let V=0;for(let Y=1;Y<E.pos.length;Y++)V+=E.pos[Y].distanceTo(E.pos[Y-1]);E.len=Math.max(V,4)}function S(P,V,Y){let L=P.length-1,Z=Zn(V,0,1)*L,J=Math.min(L-1,Math.floor(Z)),oe=Z-J,fe=P[Math.max(0,J-1)],le=P[J],R=P[J+1],I=P[Math.min(L,J+2)],se=oe*oe,ae=se*oe,k=(ce,ve,_e,Te)=>.5*(2*ve+(-ce+_e)*oe+(2*ce-5*ve+4*_e-Te)*se+(-ce+3*ve-3*_e+Te)*ae);return Y.set(k(fe.x,le.x,R.x,I.x),k(fe.y,le.y,R.y,I.y),k(fe.z,le.z,R.z,I.z))}function z(P){let V=Math.max(26,E.len/Yi.titleSpeed);E.t+=P,E.t>=V&&(E.t=0);let Y=E.t/V,L=Y*Y*(3-2*Y)*.25+Y*.75,Z=i.camera,J=i.time.t;S(E.pos,L,b),S(E.look,L,m),b.x+=Math.sin(J*.31)*.05,b.y+=Math.sin(J*.43+1.7)*.035,b.z+=Math.sin(J*.27+.6)*.05,m.y+=Math.sin(J*.19)*.12,m.x+=Math.sin(J*.13+2)*.2,Z.position.copy(b),Z.lookAt(m),Z.rotation.z+=Math.sin(J*.21)*.006,!i.params.fov&&Math.abs(Z.fov-Yi.titleFov)>.01&&(Z.fov=Yi.titleFov,Z.updateProjectionMatrix()),e.fade=Math.max(1-sl(0,1.8,E.t),sl(V-1.6,V,E.t))}function H(){a(i.enemies,"clear"),a(i.fx,"clear"),a(i.combat,"reset"),a(i.weapon,"reset"),c.time=0,c.cut=0,c.allCut=!1,c.bossActive=!1,c.bossSlain=!1,s&&s.supplies&&s.supplies.reset&&s.supplies.reset(),c.queue.length=0,c.waveHot=0,c.alertT=0,c.pursuitT=0,c.pursuitLeft=0,c.contactSaid=!1,c.lowSaid=!1,c.extractHint=0,c.used.clear(),c.relays=A().map((P,V)=>{let Y=(/([a-z0-9])$/i.exec(String(P.id||""))||[0,String.fromCharCode(65+V)])[1].toUpperCase();return O(P,"live"),{o:P,id:P.id||"relay_"+V,short:Y,t:0,cut:!1,cutting:!1}}),n.reset(s.playerStart),o.reset&&o.reset(),e.saturation=t,e.flash=0,q(),o.setRelays&&o.setRelays(0,c.relays.length),ie()}function O(P,V){try{let Y=P&&P.object&&P.object.userData;Y&&typeof Y.setState=="function"&&Y.setState(V)}catch(Y){console.error("[game] relay setState threw",Y)}}function q(){if(!o.setMarkers)return;let P=c.relays.filter(V=>!V.cut).map(V=>({id:V.id,short:V.short,label:V.o.label||"中继 "+V.short,pos:V.o.pos,kind:"relay"}));if(c.bossActive&&i.enemies&&i.enemies.getBoss&&i.enemies.getBoss()){P.push({id:"boss",short:"泰坦",label:"ppk巨像",pos:i.enemies.getBoss().pos,kind:"extract"})}c.allCut&&s.extraction&&P.push({id:"extract",short:"撤离",label:"撤离艇",pos:s.extraction.pos,kind:"extract"}),o.setMarkers(P)}function U({skipIntro:P=!1,quick:V=!1,keepRetries:Y=!1}={}){if(Y||(c.retries=0),l.show("none"),l.locationCard(!1),a(i.audio,"setPaused",!1),H(),a(i.weapon,"setVisible",!0),g=!1,P){e.fade=0,T();return}h=V?Yi.retryIntroSeconds:Yi.introSeconds,f=V,p=V,n.enabled=!1,r.setGameplay&&r.setGameplay(!1),o.show(!1),e.fade=1,a(i.audio,"setIntensity",.15),M("intro")}function T(){n.enabled=!0,o.show(!0),r.setGameplay&&r.setGameplay(!0),o.setObjective(D()),M("playing"),C(!0)}function CK(){return !!(s&&(s.chapter===3||s.chapter===4)&&s.copy)}function D(){if(c.bossActive)return CK()?("决战：摧毁“"+(s.copy.bossName||"泰坦总装体")+"”"):"决战：摧毁“ppk巨像”港务泰坦";if(c.allCut)return CK()&&s.copy.extractObjective?s.copy.extractObjective:"前往ppk撤离艇";let P=c.relays.length-c.cut;if(CK())return c.cut===0?(s.copy.objectiveFirst||"切断总装线三段供电"):P===1?(s.copy.objectiveLast||"切断最后一段供电"):(s.copy.objectiveMid?s.copy.objectiveMid.replace("{P}",String(P)):`切断剩余 ${P} 段供电`);return s&&s.chapter===2?(c.cut===0?"瘫痪两座中枢护盾发生器":"瘫痪最后一座护盾发生器"):c.cut===0?"切断三处上行中继":P===1?"切断最后一处中继":`切断剩余 ${P} 处中继`}function C(P){let V=r.describeMode?r.describeMode():"";l.setLookMode(V),!(!P&&V===x)&&(x=V,_.state==="playing"&&(r.mode==="drag"||r.mode==="lock"&&!r.locked&&!i.params.shot&&!i.params.autostart)?o.message(V,r.mode==="drag"?7:4):_.state==="playing"&&r.locked&&o.message("",0))}r.onModeChange&&r.onModeChange(()=>C(!1)),i.events.on("input:lock",P=>{if(P.locked){g=!0,C(!1);return}_.state==="playing"&&g&&G(),g=!1}),document.addEventListener("visibilitychange",()=>{document.hidden&&_.state==="playing"&&G()}),addEventListener("keydown",P=>{_.state!=="title"||l.panelOpen||P.code!=="Enter"&&P.code!=="NumpadEnter"||P.target&&P.target.tagName==="BUTTON"||(a(i.audio,"resume"),r.requestLock(),U({}))});function G(){_.state==="playing"&&(r.setGameplay&&r.setGameplay(!1),r.exitLock(),a(i.audio,"setPaused",!0),l.setLookMode(r.mode==="drag"?r.describeMode():r.touch?"":"继续游戏后将重新捕获鼠标。"),o.show(!1),l.show("paused"),d=.35,M("paused"))}function j(P){_.state==="paused"&&(l.show("none"),a(i.audio,"setPaused",!1),o.show(!0),r.setGameplay&&r.setGameplay(!0),g=!1,r.requestLock(),M("playing"),setTimeout(()=>C(!0),700))}function N(P){let V=(P==="gull"||P==="sniper")?"air":"ground",Y=s&&s.enemySpawns||[],L=Y.filter(Z=>Z.type===V&&(P!=="sniper"||Z.pos.y>=7.5));return L.length?L:Y}function Q(P,{minDist:V=Yi.spawnFar,from:Y=n.pos,preferHidden:L=!0}={}){let Z=N(P),J=null,oe=-1e9;for(let le of Z){let R=Math.hypot(le.pos.x-Y.x,le.pos.z-Y.z),I=i.rng()*1.5;if(I+=R>=V?2+Math.min(1,(R-V)/30)*.5:-(V-R)/4,L){b.copy(le.pos),b.y+=(P==="gull"||P==="sniper")?0:1;let ae=!0;try{ae=i.physics.lineOfSight(b,n.eye)}catch{}ae||(I+=2.5)}let se=c.used.get(le);se!==void 0&&c.time-se<6&&(I-=3),I>oe&&(oe=I,J=le)}let fe=new W;if(J){c.used.set(J,c.time),fe.copy(J.pos);let le=(i.rng()-.5)*2.4,R=(i.rng()-.5)*2.4,I=(P==="gull"||P==="sniper");try{I||(I=i.physics.nav.isWalkable(fe.x+le,fe.z+R))}catch{I=!1}I&&(fe.x+=le,fe.z+=R)}else{let le=i.rng()*Math.PI*2;fe.set(Zn(Y.x+Math.cos(le)*26,-34,26),0,Zn(Y.z+Math.sin(le)*26,-26,24))}return(P==="gull"||P==="sniper")&&fe.y<2.5&&(fe.y=6.5+i.rng()*3.2),fe}function K(P,V,Y){let L=null;try{L=i.enemies.spawn(P,V,Y)}catch(Z){console.error("[game] enemies.spawn threw",Z)}return L}function ie(){let P=s.playerStart&&s.playerStart.pos||n.pos, initialList=s&&s.chapter===2?["gull","gull","spider","spider","sniper","hound"]:["gull","gull","hound","spider"];if(i.difficulty)initialList=i.difficulty.filterWave(initialList,!0);for(let V of initialList)K(V,Q(V,{minDist:28,from:P,preferHidden:!0}),{state:"patrol"})}function F(P){let Y=s&&s.chapter===2?(P===0?["gull","spider","shield","sniper","spider","hound"]:["gull","spider","sniper"]):(P===0?["gull","gull","spider","hound","spider"]:P===1?["gull","gull","sniper","hound","spider","spider"]:["gull","gull","shield","sniper","hound","spider","spider"]);if(i.difficulty)Y=i.difficulty.filterWave(Y,!1);let L=0,Z=0;Y.forEach((oe,fe)=>{let le=Q(oe);L+=le.x-n.pos.x,Z+=le.z-n.pos.z,c.queue.push({type:oe,pos:le,at:c.time+1.6+fe*Yi.spawnStagger})}),c.waveHot=30;let J=(Math.atan2(L,-Z)*180/Math.PI+360)%360;o.warn&&o.warn("发现敌情 · "+jC[Math.round(J/45)%8],3.4)}function X(P){let V=ne();for(let Y=0;Y<c.queue.length;Y++){let L=c.queue[Y];if(c.time<L.at)continue;if(V>=Yi.maxAlive){L.at=c.time+1;continue}if(!K(L.type,L.pos,{state:"alert",target:n.pos})&&!i.enemies.stub&&(L.tries=(L.tries||0)+1)<6){L.at=c.time+1.5;continue}c.queue.splice(Y,1),a(i.enemies,"alert",n.pos,60);break}if(c.allCut){if(c.pursuitT-=P,c.pursuitT<=0&&c.pursuitLeft>0&&!c.queue.length&&V<Yi.pursuitMinAlive){c.pursuitT=Yi.pursuitEvery,c.pursuitLeft--;let Y=i.rng()<.6?"gull":"hound";c.queue.push({type:Y,pos:Q(Y),at:c.time+.5})}c.pursuitT<=0&&(c.pursuitT=4,a(i.enemies,"alert",n.pos,90))}}function ne(){try{return i.enemies.aliveCount?i.enemies.aliveCount():i.enemies.list.filter(P=>P.alive).length}catch{return 0}}function re(P){let V=i.enemies&&i.enemies.list||[];for(let Y=0;Y<V.length;Y++){let L=V[Y];if(L&&L.alive&&L.pos&&Math.hypot(L.pos.x-n.pos.x,L.pos.z-n.pos.z)<P)return!0}return!1}i.events.on("enemy:alert",()=>{c.alertT=10,_.state==="playing"&&!c.contactSaid&&(c.contactSaid=!0,o.radio&&o.radio(_l.contact,3.2))}),i.events.on("player:hit",()=>{c.alertT=Math.max(c.alertT,8)}),i.events.on("player:rescued",()=>{_.state==="playing"&&o.message("已从水中获救",2.5)});function $(){let P=null,V=Yi.interactRange;for(let Y of c.relays){if(Y.cut)continue;let L=Y.o.pos.x-n.pos.x,Z=Y.o.pos.z-n.pos.z,J=Math.hypot(L,Z);J>V||Math.abs((Y.o.pos.y||0)-n.pos.y)>2.5||J>.9&&(L*n.forward.x+Z*n.forward.z)/(J*Math.max(.2,Math.hypot(n.forward.x,n.forward.z)))<Yi.interactFacing||(P=Y,V=J)}return P}function ue(P){let V=n.alive?$():null;for(let L of c.relays)L.cut||(L===V&&r.down("interact")?(L.cutting||(L.cutting=!0,O(L.o,"cutting")),L.t+=P/Yi.cutSeconds,i.events.emit("objective:progress",{id:L.id,t:Math.min(1,L.t)}),L.t>=1&&me(L)):L.t>0&&(L.t=Math.max(0,L.t-P*1.6),L.cutting&&(L.cutting=!1,O(L.o,"live"),i.events.emit("objective:progress",{id:L.id,t:0}))));V&&!V.cut?o.setPrompt&&o.setPrompt("切断中继 "+V.short,Fo(V.t)):o.setPrompt&&o.setPrompt(null);let Y=s.extraction;if(Y&&Y.pos){let L=Math.hypot(Y.pos.x-n.pos.x,Y.pos.z-n.pos.z),Z=L<(Y.radius||2.5)&&Math.abs(Y.pos.y-n.pos.y)<3.5;Z&&c.allCut&&n.alive?ee():Z&&!c.allCut&&c.extractHint<=0&&(c.extractHint=8,o.message(c.bossActive?(CK()&&s.copy.extractLocked?s.copy.extractLocked:"港务泰坦仍在封锁停机坪，必须先将其摧毁！"):"目标尚未完成，撤离艇无法在火力下接应",3.5)),c.extractHint=Math.max(0,c.extractHint-P)}}function me(P){P.cut=!0,P.cutting=!1,P.t=1,c.cut++,O(P.o,"cut");let V=c.relays.length;i.events.emit("objective:done",{id:P.id,index:c.cut,total:V}),o.setRelays&&o.setRelays(c.cut,V),o.setPrompt&&o.setPrompt(null),n.addShake(.18),F(c.cut-1);s&&(s.chapter===3||s.chapter===4)&&i.events.emit("chapter"+s.chapter+":relay",{index:c.cut,total:V});if(c.cut>=V){if(CK()){c.bossActive=!0;let bPos=(s.bossSpawn||new W(18.4,0,-8.4)).clone();s.chapter===4&&i.weapon&&i.weapon.unlockArc&&i.weapon.unlockArc(!0);K(s.chapter===4?"boss4":"boss",bPos,{state:"alert",target:n.pos});a(i.audio,"play","boss_roar",{gain:1});o.warn&&o.warn(s.copy.bossWarn||"高危警报 · 泰坦总装体完成激活！",4.8);o.radio&&o.radio(s.copy.bossRadio||"指挥中心：它起来了！集火胸腔散热核心！",5.6)}else if(s&&s.chapter===2){c.bossActive=!0;let bPos=(s.bossSpawn||new W(13.5,0,2)).clone();K("boss",bPos,{state:"alert",target:n.pos});a(i.audio,"play","boss_roar",{gain:1});o.warn&&o.warn("高危警报 · 零四型重装港务泰坦已降临停机坪！",4.5);o.radio&&o.radio("指挥中心：两座护盾发生器已瘫痪，但主脑启动了终极防卫机甲“ppk巨像”！前往东侧停机坪摧毁它！",5.2)}else{c.allCut=!0,c.pursuitLeft=Yi.pursuitExtra,c.pursuitT=12,i.events.emit("objective:all",{}),o.radio&&o.radio(_l.all,4.5)}}else{o.radio&&o.radio((CK()&&s.copy.cut)?s.copy.cut[Math.min(c.cut-1,s.copy.cut.length-1)]:_l.cut[Math.min(c.cut-1,_l.cut.length-1)],3.6)}o.setObjective(D()),q()}i.events.on("boss:defeated",()=>{_.state==="playing"&&(c.bossActive=!1,c.bossSlain=!0,c.allCut=!0,c.pursuitLeft=2,c.pursuitT=14,i.events.emit("objective:all",{}),o.warn&&o.warn(CK()&&s.copy.bossDownWarn?s.copy.bossDownWarn:(s&&s.chapter===3?"泰坦总装体已解体 · 出坞闸门解锁！":"ppk巨像已彻底摧毁 · 撤离航道解锁！"),4.2),o.radio&&o.radio(CK()&&s.copy.bossDownRadio?s.copy.bossDownRadio:"指挥中心：干得漂亮！ppk巨像已被彻底摧毁！立即前往南侧撤离艇登船！",5),o.setObjective(D()),q())});i.events.on("player:dead",()=>{_.state!=="playing"&&_.state!=="paused"||(r.setGameplay&&r.setGameplay(!1),r.exitLock(),o.setPrompt&&o.setPrompt(null),o.show(!1),o.clearRadio&&o.clearRadio(),l.setDead({time:c.time,relays:c.cut,total:c.relays.length}),M("dead"))});function ee(){n.invulnerable=!0,n.enabled=!1,r.setGameplay&&r.setGameplay(!1),r.exitLock(),o.setPrompt&&o.setPrompt(null),o.show(!1),i.events.emit("extraction:reached",{}),o.clearRadio&&o.clearRadio(),o.radio&&o.radio(_l.done,2.2);let P=i.combat&&i.combat.stats||{shots:0,hits:0,kills:0},V=P.shots>0?Zn(P.hits/P.shots,0,1):null,Y=(c.time<270?2:c.time<400?1:0)+(V>=.5?2:V>=.3?1:0)+(c.retries===0?1:0),L=["险象环生","火力全开","稳扎稳打","干净利落","精准果断","完美突击"][Y];l.setDebrief({time:c.time,accuracy:V,kills:P.kills||0,retries:c.retries,rating:L}),M("complete")}function B(P){switch(u+=P,_.state){case"title":return z(P),!1;case"intro":return e.fade=1-sl(.25,Math.min(h,2.6),u),!f&&u>.5&&(f=!0,l.locationCard(!0)),!p&&u>1.3&&(p=!0,o.radio&&o.radio((CK()&&s.copy.intro)||(s&&s.chapter===2?"ppk队员，你已登临深水中枢甲板。瘫痪货舱与舰桥的两座护盾发生器，引出并摧毁主脑泰坦！":_l.intro),5.4)),u>h-.6&&!o.root?.classList.contains("on")&&(o.show(!0),o.setObjective(D())),u>=h&&(l.locationCard(!1),e.fade=0,T()),!0;case"playing":{if(c.time+=P,e.fade=kn(e.fade||0,0,6,P),d>0&&(d-=P),r.pressed("pause"))return G(),!1;if(ue(P),_.state!=="playing")return!0;X(P),c.alertT=Math.max(0,c.alertT-P),c.waveHot=Math.max(0,c.waveHot-P);let V=ne();c.waveHot>0&&V===0&&!c.queue.length&&c.waveHot<24&&(c.waveHot=0);let Y=c.bossActive||c.allCut||c.queue.length||c.waveHot>0&&V>0?1:c.alertT>0||V>0&&re(26)?.6:.15;return Y!==c.intensity&&(c.intensity=Y,a(i.audio,"setIntensity",Y)),r.mode==="lock"&&!r.locked&&!r.touch&&!i.params.shot&&!i.params.autostart?(y-=P,y<=0&&(y=2,o.message(r.describeMode(),2.6))):y=.8,!c.lowSaid&&n.alive&&n.health<30&&(c.lowSaid=!0,o.radio&&o.radio(_l.low,3)),!0}case"paused":return d>0?d-=P:r.pressed("pause")&&(l.closePanel()||j(!1)),!1;case"dead":return e.saturation=kn(e.saturation??1,.12,2.2,P),e.fade=kn(e.fade||0,.55,1.4,P),u>1.5&&l.screen!=="dead"&&(l.show("dead"),a(i.audio,"setIntensity",.15)),!0;case"complete":return e.fade=kn(e.fade||0,.72,.9,P),e.saturation=kn(e.saturation??1,t*.7,1,P),u>3.3&&l.screen!=="complete"&&(l.show("complete"),a(i.audio,"setIntensity",.15)),!0}return!1}return w(),n.enabled=!1,o.show(!1),a(i.weapon,"setVisible",!1),r.setGameplay&&r.setGameplay(!1),a(i.audio,"setIntensity",.15),i.params.shot||i.params.autostart||l.show("title"),_}var gM={mats:qg,level:cv,backdrop:mv,ground:vv,fx:Sv,weapon:Xv,enemies:ex,props:$g,render:Vg};window.__frames=0;window.__ready=!1;window.__fatal=null;window.__errors=[];var vM=document.getElementById("boot"),xM=document.getElementById("boot-msg"),yM=document.getElementById("boot-fill");function bM(i){window.__fatal=String(i),console.error("[fatal] "+i);let e=document.getElementById("fatal");e||(e=document.createElement("div"),e.id="fatal",document.getElementById("app").appendChild(e)),e.textContent="ppk启动失败："+i}window.addEventListener("error",i=>{window.__errors.push(String(i.message))});{let i=console.error.bind(console);console.error=(...e)=>{try{window.__errors.push(e.map(t=>t&&t.stack||String(t)).join(" ").slice(0,400))}catch{}i(...e)}}var KC=()=>new Promise(i=>setTimeout(i,0));async function Nr(i,e){xM&&(xM.textContent=i),yM&&(yM.style.width=Math.round(e*100)+"%"),await KC()}async function QC(){let i=Object.fromEntries(new URLSearchParams(location.search)),e=!!i.bench||location.hash==="#bench";e&&(i.noaudio="1",i.autostart="1");let t={THREE:lt,params:i,events:Dy(),rng:il(+(i.seed||4207)),time:{t:0,dt:0,frame:0,real:0},quality:zy(i.q||(i.shot?"test":""))};window.__G=t;let n=i.show&&gM[i.show]?i.show:null;t.showcase=n;let s=null;function o(h){if(h.cam){let f=String(h.cam).split(",").map(Number);s={pos:new W(f[0],f[1],f[2]),look:new W(f[3]??0,f[4]??1,f[5]??0)}}h.cam===""&&(s=null),h.fov&&(t.camera.fov=+h.fov,t.camera.updateProjectionMatrix()),h.exposure&&(t.render.exposure=+h.exposure)}window.__setShot=o;async function r(h,f,p,d=!1){let v=performance.now();try{t[h]=await p()}catch(x){if(console.error(`[boot] module "${h}" failed: ${x&&x.stack||x}`),d||!dr[h])throw x;t[h]=dr[h]()}let g=performance.now()-v;g>150&&console.log(`[boot] ${h} ${g.toFixed(0)}ms`)}if(await Nr("正在启动渲染器",.04),await r("render","render",()=>Hg(t),!0),t.renderer=t.render.renderer,t.scene=t.render.scene,t.camera=t.render.camera,t.viewCamera=t.render.viewCamera,await Nr("正在生成涂装、锈迹与雨水",.12),await r("mats","materials",()=>Gg(t)),t.physics=d3(t),t.props=Yg(t),t.input=n?tP():v_(t),n){let h=Qi(new rn(80,80).rotateX(-Math.PI/2),t.mats.get("concrete"),{cast:!1});if(t.scene.add(h),t.level={stub:!0,playerStart:{pos:new W(0,0,4),yaw:0},objectives:[],enemySpawns:[],zones:[],interiorBoxes:[],cinematicPath:[],extraction:{pos:new W,radius:2},groundSurfaceAt:()=>"concrete",update(){}},t.backdrop=dr.backdrop(),t.ground=dr.ground(),t.physics.build(),n==="fx")await r("fx","fx",()=>Cf(t));else try{t.fx=await Cf(t)}catch{t.fx=dr.fx()}t.audio=dr.audio(),t.hud=dr.hud(),t.player=nP(t),t.combat=zv(t),t.weapon=dr.weapon(),t.enemies=dr.enemies(),t.game={state:"showcase",update:()=>!1,start(){}};let f=null;try{f=await gM[n].showcase(t)}catch(p){bM(`showcase "${n}" threw: ${p&&p.stack||p}`)}t.showcaseInfo=f||{},f&&f.cam&&o({cam:[...f.cam,...f.target||[0,1,0]].join(",")})}else{if(await Nr("正在布置集装箱与中枢甲板",.34),await r("level","level",()=>createPPKLevels(t,C1,{ob,rb,By}),!0),await Nr("正在架设起重机",.5),await r("backdrop","backdrop",()=>pv(t)),await Nr("正在生成港区地面",.58),await r("ground","ground",()=>O1(t)),t.ground.stub){let h=Qi(new rn(400,400).rotateX(-Math.PI/2),t.mats.get("asphalt"),{cast:!1});t.scene.add(h)}t.physics.build(),await Nr("正在加载弹道与烟雾",.66),await r("fx","fx",()=>Cf(t)),await r("audio","audio",()=>i.noaudio?dr.audio():c_(t)),t.player=x_(t),t.combat=zv(t),ppkUpgradeCombat(t),await Nr("正在装配ppk精工军械库",.74),await r("weapon","weapon",async()=>createPPKArsenal(t,await dm(t),{Bf,Vv,N_,U_,F_,Fn,fC,zc,Rt,Cn,xr,qo,Fi,Dv,Ii})),await Nr("正在启动港区主控与港务泰坦",.82),await r("enemies","enemies",async()=>createPPKEnemies(t,await Em(t),{iu,pm,Ce,ft,Ro,Si,ds,Ur,su,Fn,Yv,$_,kC,Ci,O0,Ua,Ss,vm,Ts,s0,ga,Of,As,Yn,an,IC,zC,va})),await r("hud","hud",()=>upgradePPKHud(t,hM(t))),t.game=mM(t),installPPKMenuExtensions(t)}await Nr("正在准备首帧画面",.92);try{await t.render.onLevelReady()}catch(h){console.error("[boot] render.onLevelReady failed: "+(h&&h.stack||h))}let a=0;if(window.__stats=()=>({...t.render.stats?t.render.stats():{},fps:a?+(1/a).toFixed(1):0,state:t.game&&t.game.state}),i.cam&&o(i),i.fov&&o({fov:i.fov}),!n&&(i.shot||i.autostart))try{t.game.start({skipIntro:!0})}catch(h){console.error("[boot] game.start failed",h)}i.noweapon&&t.weapon.setVisible&&t.weapon.setVisible(!1),e&&eP(t),await Nr("准备就绪",1),vM.classList.add("done"),setTimeout(()=>{vM.hidden=!0},700);let l=performance.now(),c=1,u=(h,f)=>{let p=t[h];if(p&&p.update)try{p.update(f)}catch(d){u.err[h]||(u.err[h]=1,console.error(`[loop] ${h}.update threw: ${d&&d.stack||d}`))}};u.err={},t.renderer.setAnimationLoop(()=>{let h=performance.now(),f=(h-l)/1e3;l=h,a=a?a*.95+f*.05:f;let p=Math.min(f,.05);i.dt&&(p=+i.dt),t.time.dt=p,t.time.t+=p,t.time.real=h/1e3,t.time.frame++,u("input",p);let d=!1;try{d=t.game.update(p)!==!1&&t.game.state!=="title"&&t.game.state!=="paused"}catch(v){u.err.game||(u.err.game=1,console.error("[loop] game.update threw: "+(v&&v.stack||v)))}if(n){if(t.showcaseInfo.update)try{t.showcaseInfo.update(p)}catch(v){u.err.sc||(u.err.sc=1,console.error("[loop] showcase update threw: "+(v&&v.stack||v)))}}else d&&(u("player",p),u("weapon",p),u("enemies",p));if(t.weapon&&t.weapon.setWetness&&t.level&&t.level.interiorBoxes&&t.level.interiorBoxes[0]){let v=t.level.interiorBoxes[0],g=t.camera.position,x=g.x>v.min.x&&g.x<v.max.x&&g.z>v.min.z&&g.z<v.max.z&&g.y<v.max.y;c+=((x?.3:1)-c)*Math.min(1,p*(x?.25:.6));try{t.weapon.setWetness(c)}catch{}}t.game.state!=="paused"&&(u("fx",p),u("ground",p),u("level",p),u("backdrop",p),u("mats",p)),u("audio",p),u("hud",p),s&&(t.camera.position.copy(s.pos),t.camera.lookAt(s.look)),t.bench&&t.bench.frame(f);try{t.render.frame(p)}catch(v){u.err.render||(u.err.render=1,console.error("[loop] render.frame threw: "+(v&&v.stack||v)))}t.input.endFrame&&t.input.endFrame(),window.__frames++,window.__frames===2&&(window.__ready=!0)})}function eP(i){let e=document.createElement("pre");e.id="bench",e.style.cssText='position:absolute;left:12px;top:12px;z-index:90;margin:0;padding:10px 12px;font:12px/1.45 "PingFang SC",ui-monospace,monospace;color:#d8f0d0;background:rgba(0,0,0,.72);white-space:pre-wrap;max-width:min(560px,90vw);pointer-events:none',document.getElementById("app").appendChild(e);let t="unknown";try{let f=i.renderer.getContext(),p=f.getExtension("WEBGL_debug_renderer_info");t=p?f.getParameter(p.UNMASKED_RENDERER_WEBGL):f.getParameter(f.RENDERER)}catch{}let n=i.level.cinematicPath&&i.level.cinematicPath.length>=2?i.level.cinematicPath:[{pos:[-32,1.7,6],look:[0,2,5]},{pos:[10,1.7,6],look:[30,6,0]}],s=[],o=0,r=0,a=30,l=new W,c=new W,u=new W,h=new W;i.player&&(i.player.enabled=!1),i.bench={frame(f){o+=f;let p=o/a%1*(n.length-1),d=Math.min(n.length-2,Math.floor(p)),v=p-d,g=v*v*(3-2*v);if(l.fromArray(n[d].pos),c.fromArray(n[d+1].pos),u.fromArray(n[d].look),h.fromArray(n[d+1].look),i.camera.position.lerpVectors(l,c,g),i.camera.lookAt(u.lerp(h,g)),o>2&&s.push(f*1e3),s.length>3e3&&s.shift(),o-r>1&&s.length>10){r=o;let x=s.slice().sort((M,E)=>M-E),y=x.reduce((M,E)=>M+E,0)/x.length,b=x[Math.floor(x.length*.99)],m=x[x.length>>1],A=i.render.stats?i.render.stats():{},_=i.renderer.getDrawingBufferSize(new Ae);e.textContent=`ppk性能测试  t=${o.toFixed(0)}s
+  `,t.appendChild(s);let o=U=>s.querySelector(U),r=U=>[...s.querySelectorAll(U)],a=o(".panel"),l=o(".loc-card"),c=U=>s.querySelector(`[data-f="${U}"]`),u=o("#s-sens"),h=o("#s-vol"),f=o("#s-fov"),p="none",d=null;function v(U){if((!U||U==="sens")&&(i.input.sensitivity=n.sens),(!U||U==="invertY")&&(i.input.invertY=n.invertY),!U||U==="volume")try{i.audio&&i.audio.setVolume&&i.audio.setVolume(n.volume)}catch(T){console.error(T)}if((!U||U==="fov")&&i.player&&i.player.setFov&&i.player.setFov(n.fov),U==="quality"||!U&&n.quality!=="auto"&&!i.params.shot&&!i.params.q&&n.quality!==(i.quality&&i.quality.name)){let T=Pr[n.quality];if(T)try{i.render&&i.render.setQuality?i.render.setQuality({...T}):i.quality={...T}}catch(D){console.error("[game] setQuality failed",D)}}}function g(){let U=n.quality==="auto"?i.quality&&i.quality.name:n.quality;for(let D of r(".seg button"))D.setAttribute("aria-pressed",String(D.dataset.q===U));u.value=n.sens,h.value=Math.round(n.volume*100),f.value=n.fov,o('[data-o="sens"]').textContent=n.sens.toFixed(2)+"\xD7",o('[data-o="vol"]').textContent=Math.round(n.volume*100)+"%",o('[data-o="fov"]').textContent=Math.round(n.fov)+"\xB0";let T=o('[data-act="invert"]');T.setAttribute("aria-pressed",String(n.invertY)),T.querySelector("span").textContent=n.invertY?"开启":"关闭",c("qnote").textContent=n.quality==="auto"?`已根据设备自动选择画质（${({low:"低",medium:"中",high:"高",ultra:"极高"})[U]||"默认"}），运行不流畅时可降低画质。`:"画质设置立即生效；阴影和反射需要片刻重新生成。"}u.addEventListener("input",()=>{n.sens=+u.value,v("sens"),g(),Wf(n)}),h.addEventListener("input",()=>{n.volume=+h.value/100,v("volume"),g(),Wf(n)}),f.addEventListener("input",()=>{n.fov=+f.value,v("fov"),g(),Wf(n)});let x=o('[data-row="fs"]'),y=o("#fs-t"),b=()=>document.fullscreenElement||document.webkitFullscreenElement||null,m=document.getElementById("app")||document.documentElement;m&&(m.requestFullscreen||m.webkitRequestFullscreen)&&document.fullscreenEnabled!==!1&&document.webkitFullscreenEnabled!==!1||(x.hidden=!0);function _(){y.textContent="当前环境不支持全屏"}function M(){try{if(b()){(document.exitFullscreen||document.webkitExitFullscreen).call(document);return}let U=(m.requestFullscreen||m.webkitRequestFullscreen).call(m);U&&U.catch&&U.catch(_)}catch{_()}}let E=()=>{y.textContent=b()?"退出全屏":"进入全屏"};document.addEventListener("fullscreenchange",E),document.addEventListener("webkitfullscreenchange",E);function w(U){d=document.activeElement,a.hidden=!1,s.classList.add("panel-open"),z(U||"settings");try{a.focus({preventScroll:!0})}catch{}}function S(){return a.hidden?!1:(a.hidden=!0,s.classList.remove("panel-open"),d&&d.focus&&s.contains(d)?d.focus():H(),!0)}function z(U){for(let T of r(".tab"))T.setAttribute("aria-selected",String(T.dataset.tab===U));for(let T of r(".panel-b"))T.hidden=T.dataset.pane!==U}function H(){let U=s.querySelector(`.m-screen[data-s="${p}"] .btn.primary`);if(U)try{U.focus({preventScroll:!0})}catch{}}s.addEventListener("click",U=>{let T=U.target.closest("button");if(!T||!s.contains(T))return;if(i.events.emit("ui:click",{}),T.dataset.q){n.quality=T.dataset.q,v("quality"),g(),Wf(n);return}if(T.dataset.tab){z(T.dataset.tab);return}let D=T.dataset.act;D==="about"?w("about"):D==="settings"?w("settings"):D==="controls"?w("controls"):D==="close-panel"?S():D==="invert"?(n.invertY=!n.invertY,v("invertY"),g(),Wf(n)):D==="fullscreen"?M():D&&e[D]&&e[D](U)}),s.addEventListener("mouseover",U=>{let T=U.target.closest("button");T&&U.relatedTarget&&!T.contains(U.relatedTarget)&&i.events.emit("ui:hover",{})}),s.addEventListener("keydown",U=>{if(U.code==="Escape"&&!a.hidden&&(S(),U.stopPropagation(),U.preventDefault()),U.code==="Tab"&&!a.hidden){let T=[...a.querySelectorAll("button, input")].filter(G=>G.offsetParent!==null);if(!T.length)return;let D=T[0],C=T[T.length-1];U.shiftKey&&document.activeElement===D?(C.focus(),U.preventDefault()):!U.shiftKey&&document.activeElement===C&&(D.focus(),U.preventDefault())}});let O=U=>(U=Math.max(0,Math.floor(U)),String(Math.floor(U/60)).padStart(2,"0")+":"+String(U%60).padStart(2,"0")),q={root:s,settings:n,fmtTime:O,get screen(){return p},get panelOpen(){return!a.hidden},closePanel:S,show(U){U!==p&&(p=U,s.dataset.screen=U,S(),s.classList.toggle("open",U!=="none"),U!=="none"?(g(),setTimeout(H,30)):document.activeElement&&s.contains(document.activeElement)&&document.activeElement.blur())},locationCard(U){l.classList.toggle("on",!!U)},setLookMode(U){c("lookmode").textContent=U||""},setDead({time:U,relays:T,total:D}){c("dead-time").textContent=O(U),c("dead-relays").textContent=`${T}/${D}`},setDebrief({time:U,accuracy:T,kills:D,retries:C,rating:G}){c("time").textContent=O(U),c("acc").textContent=T==null?"\u2014":Math.round(T*100)+"%",c("kills").textContent=String(D),c("retries").textContent=String(C),c("rating").textContent=G},applySettings:v};return g(),q}var Yi={introSeconds:3.5,retryIntroSeconds:1.3,interactRange:2.2,interactFacing:.45,cutSeconds:2.4,patrol:{gull:2,hound:1},waves:[{gull:3,hound:1},{gull:3,hound:2},{gull:4,hound:3}],maxAlive:11,spawnStagger:.85,spawnFar:18,pursuitEvery:7,pursuitMinAlive:4,pursuitExtra:5,titleSpeed:1.15,titleFov:50},jC=["北方","东北方","东方","东南方","南方","西南方","西方","西北方"],_l={intro:"ppk队员，这里是指挥中心。港区主控已封锁泊位。切断堆场、仓库、码头的三处中继。",contact:"你已被发现！空中有机械飞鸥，地面有机械猎犬。消灭它们。",cut:["第一处中继已断开。敌方已察觉，机械守卫正在赶来。","第二处中继已断开。敌方正全力围攻，小心应对。"],all:"三处中继全部断开！撤离艇在码头南端的舷梯旁，快撤！",low:"伤势严重！找掩体躲避，稍作恢复。",done:"ppk队员已登船，港区封锁解除。干得漂亮！"};function mM(i){let e=i.render&&i.render.post||{},t=typeof e.saturation=="number"?e.saturation:1,n=i.player,s=i.level,o=i.hud,r=i.input,a=(P,V,...Y)=>{try{if(P&&typeof P[V]=="function")return P[V](...Y)}catch(L){console.error(`[game] ${V} threw`,L)}},l=pM(i,{deploy(){a(i.audio,"resume"),r.requestLock(),U({})},resume(){j(!0)},restart(){a(i.audio,"resume"),r.requestLock(),c.retries++,U({quick:!0,keepRetries:!0})},retry(){a(i.audio,"resume"),r.requestLock(),c.retries++,U({quick:!0,keepRetries:!0})},redeploy(){a(i.audio,"resume"),r.requestLock(),U({quick:!0})}});l.applySettings();let c={time:0,retries:0,relays:[],cut:0,allCut:!1,queue:[],waveHot:0,alertT:0,pursuitT:0,pursuitLeft:0,contactSaid:!1,lowSaid:!1,extractHint:0,intensity:.15,used:new Map},u=0,h=Yi.introSeconds,f=!1,p=!1,d=0,v=0,g=!1,x="",y=.8,b=new W,m=new W,A=()=>s&&s.objectives||[],_={state:"title",flow:Yi,run:c,menus:l,refreshCinematic:w,toTitle(){M("title")},start(P={}){U({skipIntro:!!P.skipIntro,quick:!!P.quick})},pause(){G()},resume(){j(!1)},update:B,debugCut(){let P=c.relays.find(V=>!V.cut);P&&me(P)}};function M(P){let V=_.state;P!==V&&(_.state=P,u=0,i.events.emit("game:state",{state:P,prev:V}))}let E={pos:[],look:[],len:1,t:0};function w(){let P=s&&s.cinematicPath||[];if(E.pos=P.map(Y=>new W(...Y.pos)),E.look=P.map(Y=>new W(...Y.look)),E.pos.length<2){let Y=s&&s.playerStart&&s.playerStart.pos||new W;E.pos=[new W(Y.x,2.2,Y.z),new W(Y.x+8,2,Y.z)],E.look=[new W(Y.x+30,2.5,Y.z-2),new W(Y.x+40,3,Y.z-2)]}let V=0;for(let Y=1;Y<E.pos.length;Y++)V+=E.pos[Y].distanceTo(E.pos[Y-1]);E.len=Math.max(V,4)}function S(P,V,Y){let L=P.length-1,Z=Zn(V,0,1)*L,J=Math.min(L-1,Math.floor(Z)),oe=Z-J,fe=P[Math.max(0,J-1)],le=P[J],R=P[J+1],I=P[Math.min(L,J+2)],se=oe*oe,ae=se*oe,k=(ce,ve,_e,Te)=>.5*(2*ve+(-ce+_e)*oe+(2*ce-5*ve+4*_e-Te)*se+(-ce+3*ve-3*_e+Te)*ae);return Y.set(k(fe.x,le.x,R.x,I.x),k(fe.y,le.y,R.y,I.y),k(fe.z,le.z,R.z,I.z))}function z(P){let V=Math.max(26,E.len/Yi.titleSpeed);E.t+=P,E.t>=V&&(E.t=0);let Y=E.t/V,L=Y*Y*(3-2*Y)*.25+Y*.75,Z=i.camera,J=i.time.t;S(E.pos,L,b),S(E.look,L,m),b.x+=Math.sin(J*.31)*.05,b.y+=Math.sin(J*.43+1.7)*.035,b.z+=Math.sin(J*.27+.6)*.05,m.y+=Math.sin(J*.19)*.12,m.x+=Math.sin(J*.13+2)*.2,Z.position.copy(b),Z.lookAt(m),Z.rotation.z+=Math.sin(J*.21)*.006,!i.params.fov&&Math.abs(Z.fov-Yi.titleFov)>.01&&(Z.fov=Yi.titleFov,Z.updateProjectionMatrix()),e.fade=Math.max(1-sl(0,1.8,E.t),sl(V-1.6,V,E.t))}function H(){spawnGraceT=0;a(i.enemies,"clear"),a(i.fx,"clear"),a(i.combat,"reset"),a(i.weapon,"reset"),c.time=0,c.cut=0,c.allCut=!1,c.bossActive=!1,c.bossSlain=!1,s&&s.supplies&&s.supplies.reset&&s.supplies.reset(),c.queue.length=0,c.waveHot=0,c.alertT=0,c.pursuitT=0,c.pursuitLeft=0,c.contactSaid=!1,c.lowSaid=!1,c.extractHint=0,c.used.clear(),c.relays=A().map((P,V)=>{let Y=(/([a-z0-9])$/i.exec(String(P.id||""))||[0,String.fromCharCode(65+V)])[1].toUpperCase();return O(P,"live"),{o:P,id:P.id||"relay_"+V,short:Y,t:0,cut:!1,cutting:!1}}),n.reset(s.playerStart),o.reset&&o.reset(),e.saturation=t,e.flash=0,q(),o.setRelays&&o.setRelays(0,c.relays.length),ie()}function O(P,V){try{let Y=P&&P.object&&P.object.userData;Y&&typeof Y.setState=="function"&&Y.setState(V)}catch(Y){console.error("[game] relay setState threw",Y)}}function q(){if(!o.setMarkers)return;let P=c.relays.filter(V=>!V.cut).map(V=>({id:V.id,short:V.short,label:V.o.label||"中继 "+V.short,pos:V.o.pos,kind:"relay"}));if(c.bossActive&&i.enemies&&i.enemies.getBoss&&i.enemies.getBoss()){P.push({id:"boss",short:"泰坦",label:"ppk巨像",pos:i.enemies.getBoss().pos,kind:"extract"})}c.allCut&&s.extraction&&P.push({id:"extract",short:"撤离",label:"撤离艇",pos:s.extraction.pos,kind:"extract"}),o.setMarkers(P)}function U({skipIntro:P=!1,quick:V=!1,keepRetries:Y=!1}={}){if(Y||(c.retries=0),l.show("none"),l.locationCard(!1),a(i.audio,"setPaused",!1),H(),a(i.weapon,"setVisible",!0),g=!1,P){e.fade=0,T();return}h=V?Yi.retryIntroSeconds:Yi.introSeconds,f=V,p=V,n.enabled=!1,r.setGameplay&&r.setGameplay(!1),o.show(!1),e.fade=1,a(i.audio,"setIntensity",.15),M("intro")}function T(){n.enabled=!0,o.show(!0),r.setGameplay&&r.setGameplay(!0),o.setObjective(D()),M("playing"),C(!0),ppkGrantSpawnGrace()}// ---- 开局保护：进入战斗后 5.5 秒内玩家无敌，且敌人不主动索敌 ----
+  // 2/3/4 章的出生点比 1 章更暴露（广场/坞门/环厅中心），不保护会被开局打成筛子。
+  const SPAWN_GRACE_SEC = 5.5;
+  let spawnGraceT = 0;
+  let spawnGraceWarned = false;
+
+  function ppkGrantSpawnGrace() {
+    spawnGraceT = SPAWN_GRACE_SEC;
+    spawnGraceWarned = false;
+    if (n) { n.invulnerable = true; n.__ppkGraceOwner = true; }
+    // 把场上已有敌人压回巡逻态，清空索敌
+    // 关键：只动 lastKnown，绝不动 target —— 引擎多处会 .copy(target)，
+    // 置 null 会直接抛 TypeError 把敌人系统打挂。
+    try {
+      const list = (i.enemies && i.enemies.list) || [];
+      const safe = (s && s.playerStart && s.playerStart.pos) || (n && n.pos) || null;
+      for (const e of list) {
+        if (!e || !e.alive || e.passive) continue;
+        if (e.mode === "engage" || e.mode === "investigate") e.mode = "patrol";
+        if (e.lastKnown && safe) e.lastKnown.copy(safe);
+        if (e.state === "alert") e.state = "patrol";
+      }
+    } catch (e) { }
+    if (o && o.message) o.message("已进入接敌区 · 战术护盾 5 秒", 2.4);
+  }
+
+  function ppkTickSpawnGrace(dt) {
+    if (spawnGraceT <= 0) return;
+    spawnGraceT -= dt;
+    if (n && n.alive) { n.invulnerable = true; n.__ppkGraceOwner = true; }
+    if (!spawnGraceWarned && spawnGraceT < 1.2) {
+      spawnGraceWarned = true;
+      if (o && o.message) o.message("护盾即将解除", 1.2);
+    }
+    if (spawnGraceT <= 0) {
+      spawnGraceT = 0;
+      // 只在「无敌是由保护期授予的」情况下才解除；
+      // 撤离（ee()）和复活等其它来源设置的无敌必须保留，否则会误伤。
+      if (n && n.alive && n.__ppkGraceOwner) {
+        n.invulnerable = false;
+        n.__ppkGraceOwner = false;
+      }
+      if (o && o.message) o.message("护盾解除 · 自由开火", 1.4);
+      try { if (i.enemies && i.enemies.alert) i.enemies.alert(n.pos, 70); } catch (e) { }
+    }
+  }
+
+  function CK(){return !!(s&&(s.chapter===3||s.chapter===4)&&s.copy)}function D(){if(c.bossActive)return CK()?("决战：摧毁“"+(s.copy.bossName||"泰坦总装体")+"”"):"决战：摧毁“ppk巨像”港务泰坦";if(c.allCut)return CK()&&s.copy.extractObjective?s.copy.extractObjective:"前往ppk撤离艇";let P=c.relays.length-c.cut;if(CK())return c.cut===0?(s.copy.objectiveFirst||"切断总装线三段供电"):P===1?(s.copy.objectiveLast||"切断最后一段供电"):(s.copy.objectiveMid?s.copy.objectiveMid.replace("{P}",String(P)):`切断剩余 ${P} 段供电`);return s&&s.chapter===2?(c.cut===0?"瘫痪两座中枢护盾发生器":"瘫痪最后一座护盾发生器"):c.cut===0?"切断三处上行中继":P===1?"切断最后一处中继":`切断剩余 ${P} 处中继`}function C(P){let V=r.describeMode?r.describeMode():"";l.setLookMode(V),!(!P&&V===x)&&(x=V,_.state==="playing"&&(r.mode==="drag"||r.mode==="lock"&&!r.locked&&!i.params.shot&&!i.params.autostart)?o.message(V,r.mode==="drag"?7:4):_.state==="playing"&&r.locked&&o.message("",0))}r.onModeChange&&r.onModeChange(()=>C(!1)),i.events.on("input:lock",P=>{if(P.locked){g=!0,C(!1);return}_.state==="playing"&&g&&G(),g=!1}),document.addEventListener("visibilitychange",()=>{document.hidden&&_.state==="playing"&&G()}),addEventListener("keydown",P=>{_.state!=="title"||l.panelOpen||P.code!=="Enter"&&P.code!=="NumpadEnter"||P.target&&P.target.tagName==="BUTTON"||(a(i.audio,"resume"),r.requestLock(),U({}))});function G(){_.state==="playing"&&(r.setGameplay&&r.setGameplay(!1),r.exitLock(),a(i.audio,"setPaused",!0),l.setLookMode(r.mode==="drag"?r.describeMode():r.touch?"":"继续游戏后将重新捕获鼠标。"),o.show(!1),l.show("paused"),d=.35,M("paused"))}function j(P){_.state==="paused"&&(l.show("none"),a(i.audio,"setPaused",!1),o.show(!0),r.setGameplay&&r.setGameplay(!0),g=!1,r.requestLock(),M("playing"),setTimeout(()=>C(!0),700))}function N(P){let V=(P==="gull"||P==="sniper")?"air":"ground",Y=s&&s.enemySpawns||[],L=Y.filter(Z=>Z.type===V&&(P!=="sniper"||Z.pos.y>=7.5));return L.length?L:Y}function Q(P,{minDist:V=Yi.spawnFar,from:Y=n.pos,preferHidden:L=!0}={}){let Z=N(P),J=null,oe=-1e9;for(let le of Z){let R=Math.hypot(le.pos.x-Y.x,le.pos.z-Y.z),I=i.rng()*1.5;if(I+=R>=V?2+Math.min(1,(R-V)/30)*.5:-(V-R)/4,L){b.copy(le.pos),b.y+=(P==="gull"||P==="sniper")?0:1;let ae=!0;try{ae=i.physics.lineOfSight(b,n.eye)}catch{}ae||(I+=2.5)}let se=c.used.get(le);se!==void 0&&c.time-se<6&&(I-=3),I>oe&&(oe=I,J=le)}let fe=new W;if(J){c.used.set(J,c.time),fe.copy(J.pos);let le=(i.rng()-.5)*2.4,R=(i.rng()-.5)*2.4,I=(P==="gull"||P==="sniper");try{I||(I=i.physics.nav.isWalkable(fe.x+le,fe.z+R))}catch{I=!1}I&&(fe.x+=le,fe.z+=R)}else{let le=i.rng()*Math.PI*2;fe.set(Zn(Y.x+Math.cos(le)*26,-34,26),0,Zn(Y.z+Math.sin(le)*26,-26,24))}return(P==="gull"||P==="sniper")&&fe.y<2.5&&(fe.y=6.5+i.rng()*3.2),fe}function K(P,V,Y){let L=null;try{L=i.enemies.spawn(P,V,Y)}catch(Z){console.error("[game] enemies.spawn threw",Z)}return L}function ie(){let P=s.playerStart&&s.playerStart.pos||n.pos, initialList=s&&s.chapter===2?["gull","gull","spider","spider","sniper","hound"]:["gull","gull","hound","spider"];if(i.difficulty)initialList=i.difficulty.filterWave(initialList,!0);for(let V of initialList)K(V,Q(V,{minDist:28,from:P,preferHidden:!0}),{state:"patrol"})}function F(P){let Y=s&&s.chapter===2?(P===0?["gull","spider","shield","sniper","spider","hound"]:["gull","spider","sniper"]):(P===0?["gull","gull","spider","hound","spider"]:P===1?["gull","gull","sniper","hound","spider","spider"]:["gull","gull","shield","sniper","hound","spider","spider"]);if(i.difficulty)Y=i.difficulty.filterWave(Y,!1);let L=0,Z=0;Y.forEach((oe,fe)=>{let le=Q(oe);L+=le.x-n.pos.x,Z+=le.z-n.pos.z,c.queue.push({type:oe,pos:le,at:c.time+1.6+fe*Yi.spawnStagger})}),c.waveHot=30;let J=(Math.atan2(L,-Z)*180/Math.PI+360)%360;o.warn&&o.warn("发现敌情 · "+jC[Math.round(J/45)%8],3.4)}function X(P){let V=ne();for(let Y=0;Y<c.queue.length;Y++){let L=c.queue[Y];if(c.time<L.at)continue;if(V>=Yi.maxAlive){L.at=c.time+1;continue}if(!K(L.type,L.pos,{state:"alert",target:n.pos})&&!i.enemies.stub&&(L.tries=(L.tries||0)+1)<6){L.at=c.time+1.5;continue}c.queue.splice(Y,1),a(i.enemies,"alert",n.pos,60);break}if(c.allCut){if(c.pursuitT-=P,c.pursuitT<=0&&c.pursuitLeft>0&&!c.queue.length&&V<Yi.pursuitMinAlive){c.pursuitT=Yi.pursuitEvery,c.pursuitLeft--;let Y=i.rng()<.6?"gull":"hound";c.queue.push({type:Y,pos:Q(Y),at:c.time+.5})}c.pursuitT<=0&&(c.pursuitT=4,a(i.enemies,"alert",n.pos,90))}}function ne(){try{return i.enemies.aliveCount?i.enemies.aliveCount():i.enemies.list.filter(P=>P.alive).length}catch{return 0}}function re(P){let V=i.enemies&&i.enemies.list||[];for(let Y=0;Y<V.length;Y++){let L=V[Y];if(L&&L.alive&&L.pos&&Math.hypot(L.pos.x-n.pos.x,L.pos.z-n.pos.z)<P)return!0}return!1}i.events.on("enemy:alert",()=>{c.alertT=10,_.state==="playing"&&!c.contactSaid&&(c.contactSaid=!0,o.radio&&o.radio(_l.contact,3.2))}),i.events.on("player:hit",()=>{c.alertT=Math.max(c.alertT,8)}),i.events.on("player:rescued",()=>{_.state==="playing"&&o.message("已从水中获救",2.5)});function $(){let P=null,V=Yi.interactRange;for(let Y of c.relays){if(Y.cut)continue;let L=Y.o.pos.x-n.pos.x,Z=Y.o.pos.z-n.pos.z,J=Math.hypot(L,Z);J>V||Math.abs((Y.o.pos.y||0)-n.pos.y)>2.5||J>.9&&(L*n.forward.x+Z*n.forward.z)/(J*Math.max(.2,Math.hypot(n.forward.x,n.forward.z)))<Yi.interactFacing||(P=Y,V=J)}return P}function ue(P){let V=n.alive?$():null;for(let L of c.relays)L.cut||(L===V&&r.down("interact")?(L.cutting||(L.cutting=!0,O(L.o,"cutting")),L.t+=P/Yi.cutSeconds,i.events.emit("objective:progress",{id:L.id,t:Math.min(1,L.t)}),L.t>=1&&me(L)):L.t>0&&(L.t=Math.max(0,L.t-P*1.6),L.cutting&&(L.cutting=!1,O(L.o,"live"),i.events.emit("objective:progress",{id:L.id,t:0}))));V&&!V.cut?o.setPrompt&&o.setPrompt("切断中继 "+V.short,Fo(V.t)):o.setPrompt&&o.setPrompt(null);let Y=s.extraction;if(Y&&Y.pos){let L=Math.hypot(Y.pos.x-n.pos.x,Y.pos.z-n.pos.z),Z=L<(Y.radius||2.5)&&Math.abs(Y.pos.y-n.pos.y)<3.5;Z&&c.allCut&&n.alive?ee():Z&&!c.allCut&&c.extractHint<=0&&(c.extractHint=8,o.message(c.bossActive?(CK()&&s.copy.extractLocked?s.copy.extractLocked:"港务泰坦仍在封锁停机坪，必须先将其摧毁！"):"目标尚未完成，撤离艇无法在火力下接应",3.5)),c.extractHint=Math.max(0,c.extractHint-P)}}function me(P){P.cut=!0,P.cutting=!1,P.t=1,c.cut++,O(P.o,"cut");let V=c.relays.length;i.events.emit("objective:done",{id:P.id,index:c.cut,total:V}),o.setRelays&&o.setRelays(c.cut,V),o.setPrompt&&o.setPrompt(null),n.addShake(.18),F(c.cut-1);s&&(s.chapter===3||s.chapter===4)&&i.events.emit("chapter"+s.chapter+":relay",{index:c.cut,total:V});if(c.cut>=V){if(CK()){c.bossActive=!0;let bPos=(s.bossSpawn||new W(18.4,0,-8.4)).clone();s.chapter===4&&i.weapon&&i.weapon.unlockArc&&i.weapon.unlockArc(!0);K(s.chapter===4?"boss4":"boss",bPos,{state:"alert",target:n.pos});a(i.audio,"play","boss_roar",{gain:1});o.warn&&o.warn(s.copy.bossWarn||"高危警报 · 泰坦总装体完成激活！",4.8);o.radio&&o.radio(s.copy.bossRadio||"指挥中心：它起来了！集火胸腔散热核心！",5.6)}else if(s&&s.chapter===2){c.bossActive=!0;let bPos=(s.bossSpawn||new W(13.5,0,2)).clone();K("boss",bPos,{state:"alert",target:n.pos});a(i.audio,"play","boss_roar",{gain:1});o.warn&&o.warn("高危警报 · 零四型重装港务泰坦已降临停机坪！",4.5);o.radio&&o.radio("指挥中心：两座护盾发生器已瘫痪，但主脑启动了终极防卫机甲“ppk巨像”！前往东侧停机坪摧毁它！",5.2)}else{c.allCut=!0,c.pursuitLeft=Yi.pursuitExtra,c.pursuitT=12,i.events.emit("objective:all",{}),o.radio&&o.radio(_l.all,4.5)}}else{o.radio&&o.radio((CK()&&s.copy.cut)?s.copy.cut[Math.min(c.cut-1,s.copy.cut.length-1)]:_l.cut[Math.min(c.cut-1,_l.cut.length-1)],3.6)}o.setObjective(D()),q()}i.events.on("boss:defeated",()=>{_.state==="playing"&&(c.bossActive=!1,c.bossSlain=!0,c.allCut=!0,c.pursuitLeft=2,c.pursuitT=14,i.events.emit("objective:all",{}),o.warn&&o.warn(CK()&&s.copy.bossDownWarn?s.copy.bossDownWarn:(s&&s.chapter===3?"泰坦总装体已解体 · 出坞闸门解锁！":"ppk巨像已彻底摧毁 · 撤离航道解锁！"),4.2),o.radio&&o.radio(CK()&&s.copy.bossDownRadio?s.copy.bossDownRadio:"指挥中心：干得漂亮！ppk巨像已被彻底摧毁！立即前往南侧撤离艇登船！",5),o.setObjective(D()),q())});i.events.on("player:dead",()=>{_.state!=="playing"&&_.state!=="paused"||(r.setGameplay&&r.setGameplay(!1),r.exitLock(),o.setPrompt&&o.setPrompt(null),o.show(!1),o.clearRadio&&o.clearRadio(),l.setDead({time:c.time,relays:c.cut,total:c.relays.length}),M("dead"))});function ee(){n.invulnerable=!0,n.enabled=!1,r.setGameplay&&r.setGameplay(!1),r.exitLock(),o.setPrompt&&o.setPrompt(null),o.show(!1),i.events.emit("extraction:reached",{}),o.clearRadio&&o.clearRadio(),o.radio&&o.radio(_l.done,2.2);let P=i.combat&&i.combat.stats||{shots:0,hits:0,kills:0},V=P.shots>0?Zn(P.hits/P.shots,0,1):null,Y=(c.time<270?2:c.time<400?1:0)+(V>=.5?2:V>=.3?1:0)+(c.retries===0?1:0),L=["险象环生","火力全开","稳扎稳打","干净利落","精准果断","完美突击"][Y];l.setDebrief({time:c.time,accuracy:V,kills:P.kills||0,retries:c.retries,rating:L}),M("complete")}function B(P){switch(u+=P,_.state){case"title":return z(P),!1;case"intro":return e.fade=1-sl(.25,Math.min(h,2.6),u),!f&&u>.5&&(f=!0,l.locationCard(!0)),!p&&u>1.3&&(p=!0,o.radio&&o.radio((CK()&&s.copy.intro)||(s&&s.chapter===2?"ppk队员，你已登临深水中枢甲板。瘫痪货舱与舰桥的两座护盾发生器，引出并摧毁主脑泰坦！":_l.intro),5.4)),u>h-.6&&!o.root?.classList.contains("on")&&(o.show(!0),o.setObjective(D())),u>=h&&(l.locationCard(!1),e.fade=0,T()),!0;case"playing":{if(c.time+=P,ppkTickSpawnGrace(P),e.fade=kn(e.fade||0,0,6,P),d>0&&(d-=P),r.pressed("pause"))return G(),!1;if(ue(P),_.state!=="playing")return!0;X(P),c.alertT=Math.max(0,c.alertT-P),c.waveHot=Math.max(0,c.waveHot-P);let V=ne();c.waveHot>0&&V===0&&!c.queue.length&&c.waveHot<24&&(c.waveHot=0);let Y=c.bossActive||c.allCut||c.queue.length||c.waveHot>0&&V>0?1:c.alertT>0||V>0&&re(26)?.6:.15;return Y!==c.intensity&&(c.intensity=Y,a(i.audio,"setIntensity",Y)),r.mode==="lock"&&!r.locked&&!r.touch&&!i.params.shot&&!i.params.autostart?(y-=P,y<=0&&(y=2,o.message(r.describeMode(),2.6))):y=.8,!c.lowSaid&&n.alive&&n.health<30&&(c.lowSaid=!0,o.radio&&o.radio(_l.low,3)),!0}case"paused":return d>0?d-=P:r.pressed("pause")&&(l.closePanel()||j(!1)),!1;case"dead":return e.saturation=kn(e.saturation??1,.12,2.2,P),e.fade=kn(e.fade||0,.55,1.4,P),u>1.5&&l.screen!=="dead"&&(l.show("dead"),a(i.audio,"setIntensity",.15)),!0;case"complete":return e.fade=kn(e.fade||0,.72,.9,P),e.saturation=kn(e.saturation??1,t*.7,1,P),u>3.3&&l.screen!=="complete"&&(l.show("complete"),a(i.audio,"setIntensity",.15)),!0}return!1}return w(),n.enabled=!1,o.show(!1),a(i.weapon,"setVisible",!1),r.setGameplay&&r.setGameplay(!1),a(i.audio,"setIntensity",.15),i.params.shot||i.params.autostart||l.show("title"),_}var gM={mats:qg,level:cv,backdrop:mv,ground:vv,fx:Sv,weapon:Xv,enemies:ex,props:$g,render:Vg};window.__frames=0;window.__ready=!1;window.__fatal=null;window.__errors=[];var vM=document.getElementById("boot"),xM=document.getElementById("boot-msg"),yM=document.getElementById("boot-fill");function bM(i){window.__fatal=String(i),console.error("[fatal] "+i);let e=document.getElementById("fatal");e||(e=document.createElement("div"),e.id="fatal",document.getElementById("app").appendChild(e)),e.textContent="ppk启动失败："+i}window.addEventListener("error",i=>{window.__errors.push(String(i.message))});{let i=console.error.bind(console);console.error=(...e)=>{try{window.__errors.push(e.map(t=>t&&t.stack||String(t)).join(" ").slice(0,400))}catch{}i(...e)}}var KC=()=>new Promise(i=>setTimeout(i,0));async function Nr(i,e){xM&&(xM.textContent=i),yM&&(yM.style.width=Math.round(e*100)+"%"),await KC()}async function QC(){let i=Object.fromEntries(new URLSearchParams(location.search)),e=!!i.bench||location.hash==="#bench";e&&(i.noaudio="1",i.autostart="1");let t={THREE:lt,params:i,events:Dy(),rng:il(+(i.seed||4207)),time:{t:0,dt:0,frame:0,real:0},quality:zy(i.q||(i.shot?"test":""))};window.__G=t;let n=i.show&&gM[i.show]?i.show:null;t.showcase=n;let s=null;function o(h){if(h.cam){let f=String(h.cam).split(",").map(Number);s={pos:new W(f[0],f[1],f[2]),look:new W(f[3]??0,f[4]??1,f[5]??0)}}h.cam===""&&(s=null),h.fov&&(t.camera.fov=+h.fov,t.camera.updateProjectionMatrix()),h.exposure&&(t.render.exposure=+h.exposure)}window.__setShot=o;async function r(h,f,p,d=!1){let v=performance.now();try{t[h]=await p()}catch(x){if(console.error(`[boot] module "${h}" failed: ${x&&x.stack||x}`),d||!dr[h])throw x;t[h]=dr[h]()}let g=performance.now()-v;g>150&&console.log(`[boot] ${h} ${g.toFixed(0)}ms`)}if(await Nr("正在启动渲染器",.04),await r("render","render",()=>Hg(t),!0),t.renderer=t.render.renderer,t.scene=t.render.scene,t.camera=t.render.camera,t.viewCamera=t.render.viewCamera,await Nr("正在生成涂装、锈迹与雨水",.12),await r("mats","materials",()=>Gg(t)),t.physics=d3(t),t.props=Yg(t),t.input=n?tP():v_(t),n){let h=Qi(new rn(80,80).rotateX(-Math.PI/2),t.mats.get("concrete"),{cast:!1});if(t.scene.add(h),t.level={stub:!0,playerStart:{pos:new W(0,0,4),yaw:0},objectives:[],enemySpawns:[],zones:[],interiorBoxes:[],cinematicPath:[],extraction:{pos:new W,radius:2},groundSurfaceAt:()=>"concrete",update(){}},t.backdrop=dr.backdrop(),t.ground=dr.ground(),t.physics.build(),n==="fx")await r("fx","fx",()=>Cf(t));else try{t.fx=await Cf(t)}catch{t.fx=dr.fx()}t.audio=dr.audio(),t.hud=dr.hud(),t.player=nP(t),t.combat=zv(t),t.weapon=dr.weapon(),t.enemies=dr.enemies(),t.game={state:"showcase",update:()=>!1,start(){}};let f=null;try{f=await gM[n].showcase(t)}catch(p){bM(`showcase "${n}" threw: ${p&&p.stack||p}`)}t.showcaseInfo=f||{},f&&f.cam&&o({cam:[...f.cam,...f.target||[0,1,0]].join(",")})}else{if(await Nr("正在布置集装箱与中枢甲板",.34),await r("level","level",()=>createPPKLevels(t,C1,{ob,rb,By}),!0),await Nr("正在架设起重机",.5),await r("backdrop","backdrop",()=>pv(t)),await Nr("正在生成港区地面",.58),await r("ground","ground",()=>O1(t)),t.ground.stub){let h=Qi(new rn(400,400).rotateX(-Math.PI/2),t.mats.get("asphalt"),{cast:!1});t.scene.add(h)}t.physics.build(),await Nr("正在加载弹道与烟雾",.66),await r("fx","fx",()=>Cf(t)),await r("audio","audio",()=>i.noaudio?dr.audio():c_(t)),t.player=x_(t),t.combat=zv(t),ppkUpgradeCombat(t),await Nr("正在装配ppk精工军械库",.74),await r("weapon","weapon",async()=>createPPKArsenal(t,await dm(t),{Bf,Vv,N_,U_,F_,Fn,fC,zc,Rt,Cn,xr,qo,Fi,Dv,Ii})),await Nr("正在启动港区主控与港务泰坦",.82),await r("enemies","enemies",async()=>createPPKEnemies(t,await Em(t),{iu,pm,Ce,ft,Ro,Si,ds,Ur,su,Fn,Yv,$_,kC,Ci,O0,Ua,Ss,vm,Ts,s0,ga,Of,As,Yn,an,IC,zC,va})),await r("hud","hud",()=>upgradePPKHud(t,hM(t))),t.game=mM(t),installPPKMenuExtensions(t)}await Nr("正在准备首帧画面",.92);try{await t.render.onLevelReady()}catch(h){console.error("[boot] render.onLevelReady failed: "+(h&&h.stack||h))}let a=0;if(window.__stats=()=>({...t.render.stats?t.render.stats():{},fps:a?+(1/a).toFixed(1):0,state:t.game&&t.game.state}),i.cam&&o(i),i.fov&&o({fov:i.fov}),!n&&(i.shot||i.autostart))try{t.game.start({skipIntro:!0})}catch(h){console.error("[boot] game.start failed",h)}i.noweapon&&t.weapon.setVisible&&t.weapon.setVisible(!1),e&&eP(t),await Nr("准备就绪",1),vM.classList.add("done"),setTimeout(()=>{vM.hidden=!0},700);let l=performance.now(),c=1,u=(h,f)=>{let p=t[h];if(p&&p.update)try{p.update(f)}catch(d){u.err[h]||(u.err[h]=1,console.error(`[loop] ${h}.update threw: ${d&&d.stack||d}`))}};u.err={},t.renderer.setAnimationLoop(()=>{let h=performance.now(),f=(h-l)/1e3;l=h,a=a?a*.95+f*.05:f;let p=Math.min(f,.05);i.dt&&(p=+i.dt),t.time.dt=p,t.time.t+=p,t.time.real=h/1e3,t.time.frame++,u("input",p);let d=!1;try{d=t.game.update(p)!==!1&&t.game.state!=="title"&&t.game.state!=="paused"}catch(v){u.err.game||(u.err.game=1,console.error("[loop] game.update threw: "+(v&&v.stack||v)))}if(n){if(t.showcaseInfo.update)try{t.showcaseInfo.update(p)}catch(v){u.err.sc||(u.err.sc=1,console.error("[loop] showcase update threw: "+(v&&v.stack||v)))}}else d&&(u("player",p),u("weapon",p),u("enemies",p));if(t.weapon&&t.weapon.setWetness&&t.level&&t.level.interiorBoxes&&t.level.interiorBoxes[0]){let v=t.level.interiorBoxes[0],g=t.camera.position,x=g.x>v.min.x&&g.x<v.max.x&&g.z>v.min.z&&g.z<v.max.z&&g.y<v.max.y;c+=((x?.3:1)-c)*Math.min(1,p*(x?.25:.6));try{t.weapon.setWetness(c)}catch{}}t.game.state!=="paused"&&(u("fx",p),u("ground",p),u("level",p),u("backdrop",p),u("mats",p)),u("audio",p),u("hud",p),s&&(t.camera.position.copy(s.pos),t.camera.lookAt(s.look)),t.bench&&t.bench.frame(f);try{t.render.frame(p)}catch(v){u.err.render||(u.err.render=1,console.error("[loop] render.frame threw: "+(v&&v.stack||v)))}t.input.endFrame&&t.input.endFrame(),window.__frames++,window.__frames===2&&(window.__ready=!0)})}function eP(i){let e=document.createElement("pre");e.id="bench",e.style.cssText='position:absolute;left:12px;top:12px;z-index:90;margin:0;padding:10px 12px;font:12px/1.45 "PingFang SC",ui-monospace,monospace;color:#d8f0d0;background:rgba(0,0,0,.72);white-space:pre-wrap;max-width:min(560px,90vw);pointer-events:none',document.getElementById("app").appendChild(e);let t="unknown";try{let f=i.renderer.getContext(),p=f.getExtension("WEBGL_debug_renderer_info");t=p?f.getParameter(p.UNMASKED_RENDERER_WEBGL):f.getParameter(f.RENDERER)}catch{}let n=i.level.cinematicPath&&i.level.cinematicPath.length>=2?i.level.cinematicPath:[{pos:[-32,1.7,6],look:[0,2,5]},{pos:[10,1.7,6],look:[30,6,0]}],s=[],o=0,r=0,a=30,l=new W,c=new W,u=new W,h=new W;i.player&&(i.player.enabled=!1),i.bench={frame(f){o+=f;let p=o/a%1*(n.length-1),d=Math.min(n.length-2,Math.floor(p)),v=p-d,g=v*v*(3-2*v);if(l.fromArray(n[d].pos),c.fromArray(n[d+1].pos),u.fromArray(n[d].look),h.fromArray(n[d+1].look),i.camera.position.lerpVectors(l,c,g),i.camera.lookAt(u.lerp(h,g)),o>2&&s.push(f*1e3),s.length>3e3&&s.shift(),o-r>1&&s.length>10){r=o;let x=s.slice().sort((M,E)=>M-E),y=x.reduce((M,E)=>M+E,0)/x.length,b=x[Math.floor(x.length*.99)],m=x[x.length>>1],A=i.render.stats?i.render.stats():{},_=i.renderer.getDrawingBufferSize(new Ae);e.textContent=`ppk性能测试  t=${o.toFixed(0)}s
 GPU: ${t}
 buffer ${_.x}x${_.y}  quality ${i.quality.name}  dpr ${window.devicePixelRatio}
 frame ms avg ${y.toFixed(1)}  median ${m.toFixed(1)}  p99 ${b.toFixed(1)}  => ${(1e3/y).toFixed(0)} fps
@@ -6853,6 +7362,292 @@ stats ${JSON.stringify(A)}
 errors ${window.__errors.length}${window.__errors.length?`
  - `+window.__errors.slice(0,6).join(`
  - `):""}`}}}}function tP(){let i=()=>{};return{move:{x:0,y:0},look:{dx:0,dy:0},fire:!1,ads:!1,sprint:!1,crouch:!1,locked:!1,touch:!1,sensitivity:1,down:()=>!1,pressed:()=>!1,update:i,endFrame:i,requestLock:i,exitLock:i}}function nP(i){return{pos:new W(0,0,4),vel:new W,yaw:0,pitch:0,health:100,maxHealth:100,alive:!0,onGround:!0,sprinting:!1,crouching:!1,ads:0,speed:0,eye:new W(0,Pi.eye,4),forward:new W(0,0,-1),enabled:!1,reset(){},damage(){},heal(){},addRecoil(){},addShake(){},update(){}}}
+// ============================================================================
+// ppk 武器皮肤系统 V2
+// 关键设计：只编译一次 shader，皮肤分支由 uniform uSlSkinId 在片元里选择。
+// 这样换肤 = 改一个 uniform，零重编译、零卡顿，且能任意扩展皮肤。
+//
+// 皮肤配方（参考 FPS 顶级皮肤的四层结构）：
+//   L1 底色层  深红珐琅 / 钛白 / 黑曜岩，叠加烤漆不均噪声
+//   L2 纹样层  六棱鳞甲 / 电路网格 / 岩石裂纹，全部程序化 triplanar
+//   L3 金属层  鎏金描边、磨损露底，靠 goldMask 混合
+//   L4 发光层  鳞缝 / 电弧 / 熔缝 自发光，带时间呼吸与过载脉冲
+// ============================================================================
+function ppkInstallSkinSystem(G) {
+  if (G && G.__ppkSkins) return G.__ppkSkins;
+  const THREE = G.THREE;
+
+  // ------------------------------------------------------------------ 皮肤库
+  const LIB = {
+    factory: {
+      id: 0, key: "factory", label: "出厂原色", accent: 0x8d9aa3,
+      desc: "未涂装原厂磷化表面，磨损见底。"
+    },
+    kirin: {
+      id: 1, key: "kirin", label: "火麒麟 · 鎏金鳞", accent: 0xff7a2a,
+      desc: "深红珐琅底 + 鎏金六棱鳞甲 + 龙脊熔金脉，鳞缝随呼吸明灭。"
+    },
+    storm: {
+      id: 2, key: "storm", label: "苍雷 · 电弧纹", accent: 0x4fd8ff,
+      desc: "钛白阳极底 + 电弧蓝电路纹，导轨沟槽持续爬电。"
+    },
+    magma: {
+      id: 3, key: "magma", label: "熔核 · 地热裂", accent: 0xff5a14,
+      desc: "黑曜岩冷却壳 + 地热熔缝，裂纹深处透出熔光。"
+    }
+  };
+  const byId = {};
+  for (const k in LIB) byId[LIB[k].id] = LIB[k];
+
+  // ------------------------------------------------------- shader 公共片段
+  const HEAD = `
+varying vec3 vSlSkinP;
+varying vec3 vSlSkinN;
+uniform float uSlTime;
+uniform float uSlSkinId;
+uniform float uSlEmitBoost;
+float dh3s(vec3 p){ return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+float dn3s(vec3 p){ vec3 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+  return mix(mix(mix(dh3s(i), dh3s(i+vec3(1,0,0)), f.x), mix(dh3s(i+vec3(0,1,0)), dh3s(i+vec3(1,1,0)), f.x), f.y),
+             mix(mix(dh3s(i+vec3(0,0,1)), dh3s(i+vec3(1,0,1)), f.x), mix(dh3s(i+vec3(0,1,1)), dh3s(i+vec3(1,1,1)), f.x), f.y), f.z); }
+vec3 skDiffuse; vec3 skEmissive; float skMetal; float skRough;
+`;
+
+  // 皮肤求值：根据 uSlSkinId 分支
+  const EVAL = `
+void ppkSkinEval(vec3 p, vec3 n, out vec3 oCol, out vec3 oEmi, out float oMet, out float oRgh) {
+  oCol = vec3(1.0); oEmi = vec3(0.0); oMet = 0.0; oRgh = 0.0;
+  float ax = abs(n.x), ay = abs(n.y), az = abs(n.z);
+  vec2 sc = (ay > ax && ay > az) ? p.xz : (ax > az ? p.zy : p.xy);
+  int id = int(uSlSkinId + 0.5);
+
+  if (id == 1) {
+    // ================= 火麒麟：深红珐琅 + 鎏金六棱鳞 =================
+    vec3 deep = vec3(0.052, 0.0060, 0.0075);   // 更深，压住红
+    vec3 gold = vec3(0.560, 0.315, 0.070);     // 鎏金降亮度，避免过曝发白
+    vec3 hot  = vec3(1.000, 0.260, 0.030);
+
+    // 蜂窝鳞甲：放大鳞片（更大气、更像「甲」而不是砂纸）
+    vec2 hc = sc * vec2(17.0, 23.0);
+    hc.x += step(1.0, mod(floor(hc.y), 2.0)) * 0.5;
+    vec2 hf = fract(hc) - 0.5;
+    float hex = max(abs(hf.x) * 0.866 + abs(hf.y) * 0.5, abs(hf.y));
+    float edge = smoothstep(0.34, 0.46, hex);      // 1 = 鳞缘（鎏金描边）
+    float face = 1.0 - edge;
+    float sId  = fract(sin(dot(floor(hc), vec2(27.3, 91.7))) * 43758.5453);
+
+    // 龙脊：沿枪身中轴的鎏金隆起带
+    float ridge = 1.0 - smoothstep(0.0, 0.042, abs(p.y + 0.010));
+    // 轴向鎏金分节箍
+    float band = smoothstep(0.93, 1.0, sin(p.z * 26.0) * 0.5 + 0.5) * 0.45;
+    float goldMask = clamp(edge * 0.62 + ridge * 0.98 + band, 0.0, 1.0);
+
+    // 珐琅烤漆不均
+    float paint = dn3s(p * 13.0) * 0.60 + dn3s(p * 52.0) * 0.40;
+    // 熔金脉：稀疏细脉
+    float vein = smoothstep(0.70, 0.95, dn3s(p * vec3(9.0, 9.0, 4.5) + 3.7));
+    vein *= face * 0.9 + ridge * 0.8;
+
+    vec3 base = mix(deep * (0.62 + 0.70 * paint), gold, goldMask * 0.88);
+    base *= 0.86 + 0.30 * sId;
+
+    float pulse = 0.70 + 0.30 * sin(uSlTime * 1.85 + p.z * 4.2);
+    oCol = base;
+    // 发光收敛：只让脉纹与龙脊渗光，鳞缘不再整体发亮
+    oEmi = hot * (vein * 1.15 * pulse) + gold * (ridge * 0.055);
+    oMet = mix(0.26, 0.88, goldMask);
+    oRgh = mix(0.42, 0.24, goldMask) + (paint - 0.5) * 0.07;
+
+  } else if (id == 2) {
+    // ================= 苍雷：钛白 + 电弧蓝电路 =================
+    vec3 ti   = vec3(0.600, 0.645, 0.705);
+    vec3 deep = vec3(0.050, 0.072, 0.112);
+    vec3 arc  = vec3(0.180, 0.760, 1.000);
+
+    vec2 g = abs(fract(sc * vec2(50.0, 50.0)) - 0.5);
+    float grid = 1.0 - smoothstep(0.0, 0.052, min(g.x, g.y));
+    float spine = 1.0 - smoothstep(0.0, 0.024, abs(p.y + 0.006));
+    float bolt = smoothstep(0.74, 0.93, dn3s(vec3(sc.x * 84.0, floor(sc.y * 30.0) * 3.1, p.z * 3.4)));
+    float m = clamp(grid * 0.72 + spine * 0.98 + bolt * 0.95, 0.0, 1.0);
+
+    float noise = dn3s(p * 24.0);
+    vec3 base = mix(deep, ti, 0.44 + 0.44 * noise);
+    base = mix(base, arc * 0.42, m * 0.50);
+    float pulse = 0.56 + 0.44 * sin(uSlTime * 3.3 + p.z * 11.0 + noise * 5.0);
+    oCol = base;
+    oEmi = arc * m * (0.80 + 0.80 * pulse);
+    oMet = 0.76;
+    oRgh = mix(0.30, 0.16, m);
+
+  } else if (id == 3) {
+    // ================= 熔核：黑曜岩 + 地热熔缝 =================
+    vec3 rock  = vec3(0.031, 0.029, 0.032);
+    vec3 lava  = vec3(1.000, 0.290, 0.045);
+    vec3 ember = vec3(1.000, 0.680, 0.180);
+
+    float n1 = dn3s(p * 10.0), n2 = dn3s(p * 25.0 + 5.0), n3 = dn3s(p * 60.0);
+    float crack = 1.0 - abs(n1 * 0.60 + n2 * 0.30 + n3 * 0.10 - 0.5) * 2.0;
+    crack = pow(clamp(crack, 0.0, 1.0), 7.0);
+
+    float facet = dn3s(p * 16.0);
+    vec3 base = rock * (0.55 + 1.15 * facet);
+    vec3 glow = mix(lava, ember, pow(clamp(crack, 0.0, 1.0), 0.6));
+    float breathe = 0.60 + 0.40 * sin(uSlTime * 1.50 + p.z * 3.0 + n1 * 4.0);
+    oCol = base;
+    oEmi = glow * (crack * 2.40) * breathe;
+    oMet = 0.17 + 0.20 * facet;
+    oRgh = mix(0.60, 0.32, crack);
+  }
+}
+`;
+
+  // ------------------------------------------------------------ 材质改造
+  function makeSkinnable(mat, skinUniforms) {
+    if (!mat || mat.userData.__skin) return mat;
+    mat.userData.__skin = true;
+    mat.userData.skinU = skinUniforms;
+    mat.userData.baseColor = mat.color ? mat.color.clone() : null;
+    mat.userData.baseRough = typeof mat.roughness === "number" ? mat.roughness : 0.5;
+    mat.userData.baseMetal = typeof mat.metalness === "number" ? mat.metalness : 0;
+    mat.userData.baseEmissive = mat.emissive ? mat.emissive.clone() : null;
+
+    const prevCompile = mat.onBeforeCompile;
+    mat.onBeforeCompile = function (shader, renderer) {
+      if (typeof prevCompile === "function") { try { prevCompile.call(this, shader, renderer); } catch (e) { } }
+      shader.uniforms.uSlTime = skinUniforms.uSlTime;
+      shader.uniforms.uSlSkinId = skinUniforms.uSlSkinId;
+      shader.uniforms.uSlEmitBoost = skinUniforms.uSlEmitBoost;
+
+      let vs = shader.vertexShader;
+      vs = vs.replace("#include <common>", "#include <common>\nvarying vec3 vSlSkinP; varying vec3 vSlSkinN;");
+      vs = vs.replace("#include <begin_vertex>", "#include <begin_vertex>\nvSlSkinP = position; vSlSkinN = normal;");
+      shader.vertexShader = vs;
+
+      let fs = shader.fragmentShader;
+      fs = fs.replace("#include <common>", "#include <common>\n" + HEAD + EVAL);
+      // 底色覆盖（在光照前）
+      fs = fs.replace("#include <normal_fragment_maps>",
+        "#include <normal_fragment_maps>\n" +
+        "if (uSlSkinId > 0.5) { vec3 skC, skE; float skM, skR;\n" +
+        "  ppkSkinEval(vSlSkinP, normalize(vSlSkinN), skC, skE, skM, skR);\n" +
+        "  diffuseColor.rgb = skC; skDiffuse = skC; skEmissive = skE; skMetal = skM; skRough = skR; }");
+      // 粗糙度/金属度覆盖
+      // 注意：three.js 在某些版本把 metalness 写死在 `#include <metalnessmap_fragment>` 里，
+      // 且 `metalnessFactor` 未必是可变变量。这里只覆盖确定可写的 roughnessFactor，
+      // 金属度改由 diffuse 亮度近似，避免 shader 编译失败。
+      fs = fs.replace("#include <roughnessmap_fragment>",
+        "#include <roughnessmap_fragment>\n" +
+        "if (uSlSkinId > 0.5) { roughnessFactor = clamp(skRough, 0.03, 1.0); }");
+      fs = fs.replace("#include <metalnessmap_fragment>",
+        "#include <metalnessmap_fragment>\n" +
+        "if (uSlSkinId > 0.5) { metalnessFactor = clamp(skMetal, 0.0, 1.0); }");
+      // 自发光叠加
+      fs = fs.replace("#include <emissivemap_fragment>",
+        "#include <emissivemap_fragment>\n" +
+        "if (uSlSkinId > 0.5) { totalEmissiveRadiance += skEmissive * uSlEmitBoost; }");
+      shader.fragmentShader = fs;
+    };
+    mat.needsUpdate = true;
+    return mat;
+  }
+
+  // ---------------------------------------------------------------- 运行时
+  const uni = {
+    uSlTime: { value: 0 },
+    uSlSkinId: { value: 0 },
+    uSlEmitBoost: { value: 1 }
+  };
+  let curId = 0;
+  let boost = 0, boostT = 0;
+  const allMats = new Set();
+
+  function collect(root) {
+    root.traverse((o) => {
+      if (!o.isMesh || !o.material) return;
+      const arr = Array.isArray(o.material) ? o.material : [o.material];
+      for (const m of arr) {
+        if (m && (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial)) {
+          makeSkinnable(m, uni);
+          allMats.add(m);
+        }
+      }
+    });
+  }
+
+  function applyVisual(skin) {
+    for (const m of allMats) {
+      const ud = m.userData;
+      if (skin.id === 0) {
+        if (m.color && ud.baseColor) m.color.copy(ud.baseColor);
+        m.roughness = ud.baseRough;
+        m.metalness = ud.baseMetal;
+        if (m.emissive && ud.baseEmissive) m.emissive.copy(ud.baseEmissive);
+      } else {
+        // 皮肤完全由 shader 输出，基色置白避免叠加偏色
+        if (m.color) m.color.setRGB(1, 1, 1);
+        m.roughness = 0.5;
+        m.metalness = 0.5;
+        if (m.emissive) m.emissive.setRGB(0, 0, 0);
+      }
+      m.needsUpdate = false; // 不强制重编译
+    }
+  }
+
+  const api = {
+    LIB,
+    list() {
+      return Object.keys(LIB).map((k) => LIB[k]);
+    },
+    get currentId() { return curId; },
+    get current() { return byId[curId] || LIB.factory; },
+
+    /** 注册需要换肤的视图模型（枪械 root 等） */
+    register(roots) {
+      for (const r of roots || []) if (r) collect(r);
+      return allMats.size;
+    },
+
+    /** 换肤 */
+    set(idOrKey) {
+      const skin = typeof idOrKey === "number" ? (byId[idOrKey] || LIB.factory) : (LIB[idOrKey] || LIB.factory);
+      curId = skin.id;
+      uni.uSlSkinId.value = skin.id;
+      applyVisual(skin);
+      G.events && G.events.emit && G.events.emit("weapon:skin", { id: skin.id, key: skin.key, label: skin.label });
+      return skin;
+    },
+
+    /** 向下一位切换 */
+    cycle(dir = 1) {
+      const keys = Object.keys(LIB);
+      const cur = this.current.key;
+      let i = keys.indexOf(cur);
+      i = (i + dir + keys.length) % keys.length;
+      return this.set(keys[i]);
+    },
+
+    /** 开火/命中时发光过载 */
+    pulse(amount = 1.0, dur = 0.34) {
+      if (curId === 0) return;
+      boost = Math.max(boost, amount);
+      boostT = Math.max(boostT, dur);
+    },
+
+    update(dt) {
+      uni.uSlTime.value += dt;
+      if (boostT > 0) {
+        boostT -= dt;
+        if (boostT <= 0) { boost = 0; boostT = 0; }
+      }
+      uni.uSlEmitBoost.value = 1 + boost * 0.65;
+    },
+
+    stats() { return { mats: allMats.size, skin: this.current.key }; }
+  };
+
+  G.__ppkSkins = api;
+  return api;
+}
 // ============================================================================
 // 《ppk：3A大作 V3》模块化扩展层（音效 / 军械与投掷物 / 防穿模敌军与泰坦Boss / 双章节关卡 / 战术HUD）
 // ============================================================================
@@ -7509,6 +8304,834 @@ function ppkUpgradeCombat(G) {
   };
 }
 
+// =========================================================================
+// ppk 爆炸特效 V2：多层合成（闪核 → 火球 → 冲击波环 → 碎片 → 烟柱 → 焦土 → 热扭曲）
+// 原版只有 wireframe 球 + smoke + spark，看起来像「烟花」。新版按真实爆轰分层：
+//   T0.00-0.06  白色闪核（过曝）+ 强点光
+//   T0.00-0.35  火球：橙白核心 → 暗红余烬，膨胀并上浮，用叠加混合压暗边界
+//   T0.02-0.42  冲击波：水平地面环 + 半球壳，菲涅尔边缘，向外扩张淡出
+//   T0.00-0.50  高速碎片：带拖尾的碎片（金属片 + 灼热块）
+//   T0.05-2.20  烟柱：多层不同速度的浓烟，先白后黑
+//   T0.00-6.00  焦土贴花：地面黑色烧痕 + 余烬辉光
+// =========================================================================
+function ppkInstallBoom(G) {
+  const THREE = G.THREE;
+  if (!THREE) return null;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const root = new THREE.Group();
+  root.name = "ppk-boom";
+  G.scene.add(root);
+
+  const pool = [];
+  const decals = [];
+  const MAX_DECALS = 14;
+
+  // --- 复用的几何体 ---
+  const geoFlash = new THREE.SphereGeometry(1, 14, 10);
+  const geoFire = new THREE.IcosahedronGeometry(1, 3);
+  const geoRing = new THREE.RingGeometry(0.72, 1.0, 48, 1);
+  const geoDome = new THREE.SphereGeometry(1, 24, 14, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  const geoDebris = new THREE.TetrahedronGeometry(1, 0);
+  const geoShard = new THREE.BoxGeometry(1, 0.22, 1);
+
+  function makeFireMaterial(hot) {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uLife: { value: 0 },
+        uHot: { value: hot ? 1 : 0 },
+        uRadius: { value: 1 },
+        uSeed: { value: Math.random() * 10 }
+      },
+      vertexShader: `
+varying vec3 vN; varying vec3 vV; varying vec3 vP;
+void main(){
+vP = position;
+vN = normalize(normalMatrix * normal);
+vec4 mv = modelViewMatrix * vec4(position, 1.0);
+vV = normalize(-mv.xyz);
+gl_Position = projectionMatrix * mv;
+}`,
+      fragmentShader: `
+varying vec3 vN; varying vec3 vV; varying vec3 vP;
+uniform float uLife; uniform float uHot; uniform float uRadius; uniform float uSeed;
+float h(vec3 p){ return fract(sin(dot(p, vec3(12.9898,78.233,37.719))) * 43758.5453); }
+float n3(vec3 p){ vec3 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
+return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),
+           mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z); }
+void main(){
+float fres = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 1.55);
+// 火球内部翻滚
+float turb = n3(vP * 3.4 + uSeed + uLife * 2.2) * 0.55 + n3(vP * 8.1 - uSeed) * 0.45;
+vec3 coreCol = mix(vec3(1.0, 0.92, 0.72), vec3(1.0, 0.55, 0.12), smoothstep(0.0, 0.55, uLife));
+vec3 edgeCol = mix(vec3(1.0, 0.42, 0.08), vec3(0.42, 0.055, 0.02), smoothstep(0.25, 1.0, uLife));
+vec3 col = mix(coreCol, edgeCol, smoothstep(0.15, 0.95, fres + turb * 0.35));
+// 亮心：面朝相机的部分最热，边缘变暗红
+float heat = (1.0 - fres) * (1.0 - uLife * 0.72) + turb * 0.30 * (1.0 - uLife);
+col *= 0.42 + 2.35 * heat;
+float a = smoothstep(0.0, 0.14, uLife) * (1.0 - smoothstep(0.42, 1.0, uLife));
+a *= 0.55 + 0.65 * heat;
+a *= mix(1.0, 0.42, fres);
+gl_FragColor = vec4(col * mix(1.0, 1.9, uHot), a);
+}`,
+      side: THREE.FrontSide
+    });
+  }
+
+  function makeRingMaterial(isDome) {
+    return new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      uniforms: { uLife: { value: 0 }, uCol: { value: new THREE.Color(1, 0.55, 0.16) } },
+      vertexShader: `
+varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+void main(){
+vUv = uv; vN = normalize(normalMatrix * normal);
+vec4 mv = modelViewMatrix * vec4(position, 1.0);
+vV = normalize(-mv.xyz);
+gl_Position = projectionMatrix * mv;
+}`,
+      fragmentShader: `
+varying vec3 vN; varying vec3 vV; varying vec2 vUv;
+uniform float uLife; uniform vec3 uCol;
+void main(){
+float fres = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.2);
+float edge = 0.35 + 0.85 * fres;
+float a = smoothstep(0.0, 0.08, uLife) * (1.0 - smoothstep(0.30, 1.0, uLife));
+a *= edge * 0.72;
+vec3 col = uCol * (1.35 + 1.6 * (1.0 - uLife));
+gl_FragColor = vec4(col, a);
+}`
+    });
+  }
+
+  // --- 对象池 ---
+  function acquire(kind) {
+    for (let i = 0; i < pool.length; i++) {
+      if (!pool[i].active && pool[i].kind === kind) { pool[i].active = true; return pool[i]; }
+    }
+    const obj = { kind, active: true, t: 0, life: 1 };
+    if (kind === "flash") {
+      obj.mesh = new THREE.Mesh(geoFlash, new THREE.MeshBasicMaterial({
+        color: new THREE.Color(9, 8.2, 6.6), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+      }));
+    } else if (kind === "fire") {
+      obj.mat = makeFireMaterial(true);
+      obj.mesh = new THREE.Mesh(geoFire, obj.mat);
+      obj.mesh.renderOrder = 6;
+    } else if (kind === "ring") {
+      obj.mat = makeRingMaterial(false);
+      obj.mesh = new THREE.Mesh(geoRing, obj.mat);
+      obj.mesh.rotation.x = -Math.PI / 2;
+      obj.mesh.renderOrder = 5;
+    } else if (kind === "dome") {
+      obj.mat = makeRingMaterial(true);
+      obj.mesh = new THREE.Mesh(geoDome, obj.mat);
+      obj.mesh.renderOrder = 5;
+    } else if (kind === "debris") {
+      obj.mesh = new THREE.Mesh(Math.random() < 0.5 ? geoDebris : geoShard,
+        new THREE.MeshBasicMaterial({ color: new THREE.Color(3.2, 1.1, 0.28) }));
+      obj.vel = new THREE.Vector3();
+      obj.spin = new THREE.Vector3();
+    }
+    obj.mesh.visible = false;
+    obj.mesh.frustumCulled = false;
+    root.add(obj.mesh);
+    pool.push(obj);
+    return obj;
+  }
+
+  const _v = new THREE.Vector3();
+  const _q = new THREE.Quaternion();
+
+  function spawnFireball(pos, radius, opts) {
+    const o = acquire("fire");
+    o.t = 0; o.life = 0.62;
+    o.r0 = radius * 0.30; o.r1 = radius * 1.05;
+    o.mesh.position.copy(pos);
+    o.mesh.position.y += 0.55;
+    o.mesh.visible = true;
+    o.mat.uniforms.uSeed.value = Math.random() * 20;
+    o.mat.uniforms.uLife.value = 0;
+    o.mat.uniforms.uHot.value = opts && opts.hot ? 1 : 0;
+  }
+  function spawnFlash(pos, radius) {
+    const o = acquire("flash");
+    o.t = 0; o.life = 0.10;
+    o.r0 = radius * 0.22; o.r1 = radius * 0.42;
+    o.mesh.position.copy(pos);
+    o.mesh.visible = true;
+  }
+  function spawnRing(pos, radius, life, color) {
+    const o = acquire("ring");
+    o.t = 0; o.life = life;
+    o.r0 = radius * 0.16; o.r1 = radius * 1.02;
+    o.mesh.position.copy(pos);
+    o.mesh.position.y = pos.y + 0.06;
+    o.mesh.visible = true;
+    if (color) o.mat.uniforms.uCol.value.setHex(color);
+    o.mat.uniforms.uLife.value = 0;
+  }
+  function spawnDome(pos, radius, life, color) {
+    const o = acquire("dome");
+    o.t = 0; o.life = life;
+    o.r0 = radius * 0.18; o.r1 = radius * 0.96;
+    o.mesh.position.copy(pos);
+    o.mesh.visible = true;
+    if (color) o.mat.uniforms.uCol.value.setHex(color);
+    o.mat.uniforms.uLife.value = 0;
+  }
+  function spawnDebris(pos, radius, count) {
+    for (let i = 0; i < count; i++) {
+      const o = acquire("debris");
+      o.t = 0; o.life = 1.4 + Math.random() * 0.9;
+      const a = Math.random() * Math.PI * 2;
+      const up = 0.32 + Math.random() * 0.95;
+      const sp = 5 + Math.random() * 9;
+      o.vel.set(Math.cos(a) * sp, up * sp, Math.sin(a) * sp);
+      o.spin.set((Math.random() - 0.5) * 26, (Math.random() - 0.5) * 26, (Math.random() - 0.5) * 26);
+      o.mesh.position.copy(pos);
+      o.mesh.position.x += Math.cos(a) * radius * 0.20;
+      o.mesh.position.z += Math.sin(a) * radius * 0.20;
+      const s = 0.055 + Math.random() * 0.11;
+      o.mesh.scale.set(s, s * (0.5 + Math.random()), s * (0.7 + Math.random() * 0.9));
+      o.mesh.visible = true;
+    }
+  }
+
+  // --- 焦土贴花 ---
+  function spawnScorch(pos, radius) {
+    if (decals.length >= MAX_DECALS) {
+      const old = decals.shift();
+      if (old && old.parent) old.parent.remove(old);
+      if (old) { old.geometry.dispose(); old.material.dispose(); }
+    }
+    // 不再生成黑色焦土圆斑（只保留下面会自然淡出的余烬环）
+
+    // 焦土余烬环
+    const eg = new THREE.RingGeometry(radius * 0.82, radius * 1.0, 30);
+    const em = new THREE.MeshBasicMaterial({
+      color: new THREE.Color(1.6, 0.42, 0.08), transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide
+    });
+    const ring = new THREE.Mesh(eg, em);
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.copy(pos);
+    ring.position.y = pos.y + 0.035;
+    ring.renderOrder = 3;
+    root.add(ring);
+    pool.push({ kind: "ember", active: true, t: 0, life: 2.6, mesh: ring, mat: em });
+  }
+
+  // --- 主入口 ---
+  const api = {
+    /** 破片高爆 */
+    frag(pos, o = {}) {
+      const R = o.radius || 6.8;
+      const p = pos.clone ? pos.clone() : new THREE.Vector3(pos.x, pos.y, pos.z);
+      spawnFlash(p, R);
+      spawnFireball(p, R, { hot: true });
+      spawnRing(p, R, 0.46, 0xff7a24);
+      spawnDome(p, R, 0.55, 0xff9a3c);
+      spawnDebris(p, R, 16);
+      spawnScorch(p, R);
+      if (G.fx) {
+        try {
+          G.fx.smoke && G.fx.smoke(p.clone().setY(p.y + 0.7), { count: 26, size: 1.9, life: 2.8, rise: 2.2, alpha: 0.72 });
+          G.fx.smoke && G.fx.smoke(p.clone().setY(p.y + 1.9), { count: 12, size: 2.6, life: 3.4, rise: 2.8, alpha: 0.38 });
+          G.fx.spark && G.fx.spark(p, new THREE.Vector3(0, 1, 0), { count: 64, speed: 19 });
+        } catch (e) { }
+      }
+      if (G.render && G.render.lightPool) {
+        try { G.render.lightPool.flash(p, 0xffd9a0, 240, 22, 0.10); } catch (e) { }
+        setTimeout(() => { try { G.render.lightPool.flash(p, 0xff8420, 130, 18, 0.26); } catch (e) { } }, 70);
+      }
+      if (G.audio) { try { G.audio.play("explosion", { pos: p, gain: 1.05 }); } catch (e) { } }
+      if (G.combat && G.combat.explode) G.combat.explode(p, R, o.damage || 175, "player");
+      if (G.player && G.player.addShake) {
+        const d = G.player.pos ? G.player.pos.distanceTo(p) : 99;
+        G.player.addShake(clamp(0.75 * (1 - d / 26), 0, 0.75));
+      }
+      return true;
+    },
+
+    /** EMP 电磁爆：冷蓝、无火球、以大范围电磁环为主 */
+    emp(pos, o = {}) {
+      const R = o.radius || 8.2;
+      const p = pos.clone ? pos.clone() : new THREE.Vector3(pos.x, pos.y, pos.z);
+      spawnFlash(p, R * 0.7);
+      spawnRing(p, R, 0.62, 0x54e6ff);
+      spawnDome(p, R, 0.72, 0x38d9ff);
+      // 二段环：延迟一圈，形成「电磁双环」
+      setTimeout(() => { try { spawnRing(p, R * 0.82, 0.52, 0x9beeff); } catch (e) { } }, 110);
+      if (G.fx) {
+        try {
+          G.fx.spark && G.fx.spark(p, new THREE.Vector3(0, 1, 0), { count: 52, speed: 15 });
+          G.fx.smoke && G.fx.smoke(p.clone().setY(p.y + 0.5), { count: 12, size: 1.5, life: 1.6, rise: 1.2, alpha: 0.30 });
+        } catch (e) { }
+      }
+      if (G.render && G.render.lightPool) {
+        try { G.render.lightPool.flash(p, 0x8fe8ff, 220, 20, 0.18); } catch (e) { }
+      }
+      if (G.audio) { try { G.audio.play("emp_blast", { pos: p, gain: 1.05 }); } catch (e) { } }
+      if (G.enemies && G.enemies.empBlast) G.enemies.empBlast(p, R, o.damage || 72);
+      if (G.combat && G.combat.explode) G.combat.explode(p, R * 0.45, (o.damage || 72) * 0.35, "player");
+      if (G.player && G.player.addShake) G.player.addShake(0.34);
+      return true;
+    },
+
+    update(dt) {
+      for (let i = pool.length - 1; i >= 0; i--) {
+        const o = pool[i];
+        if (!o.active) continue;
+        o.t += dt;
+        const k = o.t / o.life;
+        if (k >= 1) {
+          o.active = false;
+          o.mesh.visible = false;
+          if (o.mat && o.mat.uniforms && o.mat.uniforms.uLife) o.mat.uniforms.uLife.value = 1;
+          continue;
+        }
+        if (o.kind === "flash") {
+          const s = o.r0 + (o.r1 - o.r0) * Math.sqrt(k);
+          o.mesh.scale.setScalar(s);
+          o.mesh.material.opacity = 1 - k;
+        } else if (o.kind === "fire") {
+          const e = 1 - Math.pow(1 - k, 2.4);
+          const s = o.r0 + (o.r1 - o.r0) * e;
+          o.mesh.scale.set(s, s * (0.82 + 0.34 * k), s);
+          o.mesh.position.y += dt * 0.85;
+          o.mat.uniforms.uLife.value = k;
+        } else if (o.kind === "ring" || o.kind === "dome") {
+          const e = Math.pow(k, 0.55);
+          const s = o.r0 + (o.r1 - o.r0) * e;
+          o.mesh.scale.set(s, o.kind === "ring" ? s : s * 0.9, s);
+          o.mat.uniforms.uLife.value = k;
+        } else if (o.kind === "debris") {
+          o.vel.y -= 26 * dt;
+          o.mesh.position.addScaledVector(o.vel, dt);
+          if (o.mesh.position.y < 0.06) { o.mesh.position.y = 0.06; o.vel.y *= -0.32; o.vel.x *= 0.7; o.vel.z *= 0.7; }
+          o.mesh.rotation.x += o.spin.x * dt;
+          o.mesh.rotation.y += o.spin.y * dt;
+          o.mesh.rotation.z += o.spin.z * dt;
+          const c = Math.max(0, 1 - k * 1.3);
+          o.mesh.material.color.setRGB(3.2 * c, 1.1 * c, 0.28 * c);
+          o.mesh.material.opacity = 1;
+          o.mesh.material.transparent = true;
+        } else if (o.kind === "ember") {
+          o.mat.opacity = 0.55 * Math.pow(1 - k, 1.6);
+          o.mesh.scale.setScalar(1 + k * 0.12);
+        }
+      }
+    }
+  };
+  G.__ppkBoom = api;
+  return api;
+}
+// =========================================================================
+// ppk Boss 外观强化：把基础几何体拼成的「方块感」替换为硬表面细节
+// 提供通用零件生成器，供渊龙（重写头/脊椎/尾）与泰坦（表面增强）复用
+// =========================================================================
+function ppkBossKit(G) {
+  const THREE = G.THREE;
+  const kit = {};
+
+  // 倒角方块：用 BoxGeometry + 顶点内缩模拟倒角，比纯 box 有硬表面感
+  kit.bevelBox = function (w, h, d, bev) {
+    const g = new THREE.BoxGeometry(w, h, d, 1, 1, 1);
+    const p = g.attributes.position;
+    const b = bev || Math.min(w, h, d) * 0.14;
+    const v = new THREE.Vector3();
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i);
+      v.x -= Math.sign(v.x) * b * 0.55;
+      v.y -= Math.sign(v.y) * b * 0.55;
+      v.z -= Math.sign(v.z) * b * 0.55;
+      p.setXYZ(i, v.x, v.y, v.z);
+    }
+    p.needsUpdate = true;
+    g.computeVertexNormals();
+    return g;
+  };
+
+  // 楔形/装甲板：从二维剖面挤出 + 收窄，做出「装甲片」感
+  kit.armorPlate = function (len, wide, thick, taper) {
+    const t = taper === undefined ? 0.55 : taper;
+    const shape = new THREE.Shape();
+    shape.moveTo(-len * 0.5, -wide * 0.5);
+    shape.lineTo(len * 0.5, -wide * 0.5 * t);
+    shape.lineTo(len * 0.5 * 0.92, wide * 0.5 * t);
+    shape.lineTo(-len * 0.5, wide * 0.5);
+    shape.closePath();
+    const g = new THREE.ExtrudeGeometry(shape, { depth: thick, bevelEnabled: true, bevelSize: thick * 0.26, bevelThickness: thick * 0.22, bevelSegments: 2 });
+    g.rotateX(-Math.PI / 2);
+    g.computeVertexNormals();
+    return g;
+  };
+
+  // 鳞甲片：沿圆柱面分布的单片鳞（六棱台），渊龙身体覆盖用
+  kit.scalePlate = function (w, h, d) {
+    const g = new THREE.CylinderGeometry(w * 0.5, w * 0.62, d, 6, 1, false);
+    g.rotateX(Math.PI / 2);
+    g.scale(1, h / Math.max(0.001, w), 1);
+    return g;
+  };
+
+  // 鳍/刃：薄片带后掠
+  kit.fin = function (len, h, sweep) {
+    const s = new THREE.Shape();
+    s.moveTo(0, 0);
+    s.lineTo(len, -sweep * len);
+    s.lineTo(len * 0.72, -sweep * len + h);
+    s.lineTo(0, h * 0.35);
+    s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.03, bevelEnabled: false });
+    g.computeVertexNormals();
+    return g;
+  };
+
+  // 液压/线缆段
+  kit.piston = function (len, r) {
+    const g = new THREE.Group();
+    const outer = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len * 0.58, 10), G.mats.get("steel_dark", { triplanar: true }));
+    outer.position.y = -len * 0.21;
+    const inner = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.62, r * 0.62, len * 0.62, 10), G.mats.get("steel_bare", { triplanar: true }));
+    inner.position.y = len * 0.19;
+    g.add(outer, inner);
+    return g;
+  };
+
+  return kit;
+}
+
+// =========================================================================
+// 渊龙头部重写：硬表面装甲颅 + 分层颚 + 角 + 鳃裂 + 咽喉核心
+// 原作是 3 个 Box 拼的「积木头」，这里换成带倒角装甲、多层结构与发光鳃裂的头
+// =========================================================================
+function ppkBuildAbyssHead(G, THREE, opts) {
+  const kit = ppkBossKit(G);
+  const rng = opts.rng || Math.random;
+  const group = new THREE.Group();
+
+  const matShell = G.mats.get("armor_white", { triplanar: true });
+  const matUnder = G.mats.get("gunmetal", { triplanar: true });
+  const matDark = G.mats.get("steel_dark", { triplanar: true });
+  const matGold = G.mats.get("brass", { triplanar: true });
+  const matEye = new THREE.MeshBasicMaterial({ color: new THREE.Color(6.5, 1.1, 0.25) });
+  const matCore = new THREE.MeshBasicMaterial({ color: new THREE.Color(6.0, 3.4, 0.6) });
+  const matGill = new THREE.MeshBasicMaterial({ color: new THREE.Color(5.2, 1.6, 0.35) });
+
+  const add = (geo, mat, px, py, pz, rx, ry, rz) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(px || 0, py || 0, pz || 0);
+    if (rx || ry || rz) m.rotation.set(rx || 0, ry || 0, rz || 0);
+    m.castShadow = false; m.receiveShadow = true;
+    group.add(m);
+    return m;
+  };
+
+  // ---- 1. 颅顶主装甲：楔形长吻，前窄后宽，带脊线 ----
+  add(kit.armorPlate(1.85, 1.06, 0.30, 0.42), matShell, 0, 0.13, -0.10);
+  // 颅顶脊线（两条）
+  for (const s of [-1, 1]) {
+    add(kit.bevelBox(1.34, 0.10, 0.075, 0.02), matUnder, s * 0.20, 0.30, -0.02, 0, 0, s * 0.03);
+  }
+  // 吻端下压的鼻甲
+  add(kit.bevelBox(0.40, 0.20, 0.44, 0.05), matDark, 0, 0.02, 0.82, -0.12, 0, 0);
+
+  // ---- 2. 分层颚：上颚固定 + 下颚开合 ----
+  // 上颚（左右各一块，中间留牙缝）
+  for (const s of [-1, 1]) {
+    const up = add(kit.bevelBox(0.34, 0.16, 1.10, 0.035), matUnder, s * 0.21, -0.10, 0.42, 0.04, s * 0.05, 0);
+    // 上排牙
+    for (let i = 0; i < 7; i++) {
+      const zz = 0.16 + i * 0.135;
+      const sc = 0.85 - i * 0.05;
+      add(new THREE.ConeGeometry(0.026 * sc, 0.10 * sc, 5), matGold,
+        s * (0.15 + i * 0.006), -0.20, zz, Math.PI, 0, s * 0.08);
+    }
+  }
+  // 下颚：整体可开合（返回引用）
+  const jaw = new THREE.Group();
+  jaw.position.set(0, -0.30, 0.06);
+  group.add(jaw);
+  const jawBody = new THREE.Mesh(kit.armorPlate(1.35, 0.70, 0.20, 0.48), matShell);
+  jawBody.position.set(0, 0, 0.36);
+  jawBody.rotation.set(0.06, Math.PI / 2, 0);
+  jawBody.receiveShadow = true;
+  jaw.add(jawBody);
+  for (const s of [-1, 1]) {
+    for (let i = 0; i < 6; i++) {
+      const zz = 0.20 + i * 0.135;
+      const m = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.088, 5), matGold);
+      m.position.set(s * 0.14, 0.13, zz);
+      m.rotation.set(0, 0, s * 0.1);
+      jaw.add(m);
+    }
+  }
+
+  // ---- 3. 头部侧装甲：鳃裂（发光栅格）+ 颊甲 + 传感器 ----
+  for (const s of [-1, 1]) {
+    // 颊部主装甲
+    add(kit.armorPlate(1.10, 0.52, 0.16, 0.62), matUnder, s * 0.44, -0.02, 0.10, 0, s * 0.30, s * 0.10);
+    // 鳃裂：4 道发光缝，越往内越短
+    for (let i = 0; i < 4; i++) {
+      const g = add(new THREE.BoxGeometry(0.026, 0.20 - i * 0.028, 0.030), matGill,
+        s * (0.50 + i * 0.012), -0.02 - i * 0.028, 0.34 - i * 0.088, 0, s * 0.30, 0);
+      g.renderOrder = 2;
+    }
+    // 侧面传感球（多镜头）
+    add(new THREE.SphereGeometry(0.075, 12, 10), matEye, s * 0.535, 0.13, 0.10);
+    // 后掠护角：用 fin 生成后掠刃
+    const horn = add(kit.fin(0.86, 0.30, 0.55), matShell, s * 0.30, 0.26, -0.30, 0, s * 0.62, s * 0.26);
+    horn.material = matShell;
+    // 角根加固环
+    add(new THREE.CylinderGeometry(0.085, 0.11, 0.16, 8), matGold, s * 0.28, 0.30, -0.28, -0.5, 0, s * 0.5);
+  }
+
+  // ---- 4. 咽喉聚变核心：多环约束笼 + 芯球 ----
+  const coreGroup = new THREE.Group();
+  coreGroup.position.set(0, -0.16, 0.66);
+  group.add(coreGroup);
+  add(new THREE.SphereGeometry(0.19, 18, 14), matCore, 0, 0, 0).parent && null;
+  // 用 add 加在 group 上不对，改为手动加
+  const coreBall = new THREE.Mesh(new THREE.SphereGeometry(0.19, 18, 14), matCore);
+  coreGroup.add(coreBall);
+  const cageRings = [];
+  for (let i = 0; i < 3; i++) {
+    const r = 0.26 + i * 0.035;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.017, 6, 22), matGold);
+    ring.rotation.set(i === 0 ? 0 : (i === 1 ? Math.PI / 2 : 0.7), i === 2 ? 0.9 : 0, 0);
+    coreGroup.add(ring);
+    cageRings.push(ring);
+  }
+  // 核心护罩：左右两片可开合
+  const shutterL = new THREE.Mesh(kit.armorPlate(0.46, 0.60, 0.10, 0.7), matShell);
+  shutterL.position.set(-0.26, 0, 0.10); shutterL.rotation.y = Math.PI / 2;
+  const shutterR = shutterL.clone();
+  shutterR.position.set(0.26, 0, 0.10); shutterR.rotation.y = -Math.PI / 2;
+  coreGroup.add(shutterL, shutterR);
+
+  // ---- 5. 背脊散热鳍 + 后颈护板 ----
+  for (let i = 0; i < 5; i++) {
+    const zz = -0.30 - i * 0.20;
+    const hh = 0.34 - i * 0.04;
+    add(kit.fin(0.26, hh, 0.62), matUnder, 0, 0.30 - i * 0.012, zz, 0, -Math.PI / 2, 0);
+  }
+
+  // ---- 6. 激光发射器（保持原有接口）----
+  const laserEmitter = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10),
+    new THREE.MeshBasicMaterial({ color: new THREE.Color(5.0, 2.2, 0.4) }));
+  laserEmitter.position.set(0, -0.04, 0.90);
+  laserEmitter.visible = false;
+  group.add(laserEmitter);
+
+  return {
+    group,
+    jaw,
+    coreGroup,
+    coreBall,
+    cageRings,
+    shutterL,
+    shutterR,
+    laserEmitter,
+    matCore,
+    matGill,
+    matEye
+  };
+}
+
+// =========================================================================
+// 渊龙脊椎节重写：锥形装甲筒 → 分片鳞甲 + 腹甲 + 侧鳍 + 发光排气缝
+// =========================================================================
+function ppkBuilAbyssSegment(G, THREE, idx, total, radius, segLen, rng) {
+  const kit = ppkBossKit(G);
+  const group = new THREE.Group();
+  const matShell = G.mats.get("armor_white", { triplanar: true });
+  const matUnder = G.mats.get("gunmetal", { triplanar: true });
+  const matDark = G.mats.get("steel_dark", { triplanar: true });
+  const matGold = G.mats.get("brass", { triplanar: true });
+  const matVent = new THREE.MeshBasicMaterial({ color: new THREE.Color(4.6, 1.5, 0.3) });
+
+  const k = 1 - idx / total;
+  const r = radius;
+
+  // 1) 中央承力筒（收细，露出外围鳞甲）
+  const spine = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.52, r * 0.56, segLen * 1.02, 12), matDark);
+  spine.rotation.x = Math.PI / 2;
+  spine.receiveShadow = true;
+  group.add(spine);
+
+  // 2) 环向鳞甲：每节 8 片，交错叠压（这才是「蛇」的观感来源）
+  const N = 8;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2 + (idx % 2) * (Math.PI / N);
+    const plate = new THREE.Mesh(kit.scalePlate(r * 0.62, r * 0.34, segLen * 0.88), i % 2 ? matShell : matUnder);
+    plate.position.set(Math.cos(a) * r * 0.80, Math.sin(a) * r * 0.80, 0);
+    plate.rotation.set(0, 0, a - Math.PI / 2);
+    plate.rotation.x = -0.22;
+    plate.receiveShadow = true;
+    group.add(plate);
+  }
+
+  // 3) 背脊鳞冠（朝上的两排高片）
+  for (const s of [-1, 1]) {
+    const crest = new THREE.Mesh(kit.fin(segLen * 0.42, r * 0.42 * k + 0.06, 0.4), matGold);
+    crest.position.set(s * r * 0.16, r * 0.80, -segLen * 0.10);
+    crest.rotation.set(-0.35, s * 0.3, 0);
+    group.add(crest);
+  }
+
+  // 4) 腹甲：三块叠瓦
+  for (let i = 0; i < 3; i++) {
+    const belly = new THREE.Mesh(kit.bevelBox(r * 0.62, 0.075, segLen * 0.28, 0.02), matShell);
+    belly.position.set(0, -r * 0.74, (i - 1) * segLen * 0.30);
+    belly.rotation.x = 0.05;
+    group.add(belly);
+  }
+
+  // 5) 侧鳍（尺寸随节数递减）
+  for (const s of [-1, 1]) {
+    const fin = new THREE.Mesh(kit.fin(0.30 + 0.24 * k, 0.20 + 0.24 * k, 0.55), matUnder);
+    fin.position.set(s * (r * 0.92), 0.03, -segLen * 0.16);
+    fin.rotation.set(0, s > 0 ? 0 : Math.PI, s * 0.34);
+    group.add(fin);
+  }
+
+  // 6) 发光排气缝：环向 3 条（叠在鳞缝里）
+  const vents = [];
+  for (let i = 0; i < 3; i++) {
+    const v = new THREE.Mesh(new THREE.TorusGeometry(r * 0.84, 0.016, 5, 18, Math.PI * 1.35), matVent);
+    v.rotation.set(0, 0, -Math.PI * 0.675 + i * 0.12);
+    v.position.z = (i - 1) * segLen * 0.26;
+    v.renderOrder = 2;
+    group.add(v);
+    vents.push(v);
+  }
+
+  // 7) 液压连杆（连接前后节，让蛇看起来是「机械」而非漂浮）
+  if (idx < total - 1) {
+    for (const s of [-1, 1]) {
+      const p = kit.piston(segLen * 0.8, 0.036);
+      p.position.set(s * r * 0.42, -r * 0.30, -segLen * 0.5);
+      p.rotation.x = Math.PI / 2;
+      group.add(p);
+    }
+  }
+
+  return { group, vents, radius: r };
+}
+
+// =========================================================================
+// 泰坦外观强化：在既有骨架上叠加装甲块面、发光细节与轮廓件
+// 泰坦已是 GPU 蒙皮多骨骼（约 5 万面），问题在于「远看像一团」。
+// 强化方向：轮廓剪影（肩甲外扩、背鳍）+ 高对比发光体 + 关节护甲
+// =========================================================================
+function ppkUpgradeColossus(G, rigInfo) {
+  const THREE = G.THREE;
+  if (!rigInfo || !rigInfo.bones) return null;
+  const kit = ppkBossKit(G);
+  const bones = rigInfo.bones;
+  const matGold = G.mats.get("brass", { triplanar: true });
+  const matDark = G.mats.get("steel_dark", { triplanar: true });
+  const matShell = G.mats.get("armor_white", { triplanar: true });
+
+  const glowHot = new THREE.MeshBasicMaterial({ color: new THREE.Color(7.2, 2.2, 0.35) });
+  const glowCool = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.35, 2.6, 5.4) });
+
+  const added = [];
+
+  // 1) 肩甲外扩：在左右肩加「鲨鱼鳍」式装甲，扩大剪影
+  for (const [bn, s] of [["podL", -1], ["podR", 1]]) {
+    if (!bones[bn]) continue;
+    const pauldron = new THREE.Mesh(kit.armorPlate(1.10, 0.86, 0.22, 0.52), matShell);
+    pauldron.position.set(s * 0.30, 0.42, -0.10);
+    pauldron.rotation.set(-0.18, s * 0.34, s * 0.42);
+    bones[bn].add(pauldron);
+    added.push(pauldron);
+
+    // 肩顶发光条
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.045, 0.05), glowHot);
+    strip.position.set(s * 0.32, 0.62, 0.12);
+    strip.rotation.set(0, s * 0.34, s * 0.42);
+    bones[bn].add(strip);
+    added.push(strip);
+  }
+
+  // 2) 背鳍：三片竖向装甲，强化「重装机甲」剪影
+  if (bones.torso) {
+    for (let i = 0; i < 3; i++) {
+      const fin = new THREE.Mesh(kit.fin(0.42 - i * 0.06, 0.70 - i * 0.10, 0.5), matDark);
+      fin.position.set(0, 0.95 + i * 0.32, -0.62 - i * 0.10);
+      fin.rotation.set(-0.55, Math.PI / 2, 0);
+      bones.torso.add(fin);
+      added.push(fin);
+    }
+    // 胸口聚变环：三层同心发光环，强化核心辨识度
+    for (let i = 0; i < 3; i++) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.36 + i * 0.075, 0.014, 6, 26), i === 1 ? glowCool : glowHot);
+      ring.position.set(0, 0.82, 0.70);
+      bones.torso.add(ring);
+      added.push(ring);
+    }
+  }
+
+  // 3) 腿部关节护甲：膝/踝加金色护罩
+  for (const [bn, s] of [["thighL", -1], ["thighR", 1]]) {
+    if (!bones[bn]) continue;
+    const knee = new THREE.Mesh(kit.bevelBox(0.62, 0.34, 0.30, 0.06), matGold);
+    knee.position.set(0, -0.94, 0.14);
+    bones[bn].add(knee);
+    added.push(knee);
+  }
+
+  // 4) 头部：加冠冕式装甲 + 双眼发光增强
+  if (bones.head) {
+    const crest = new THREE.Mesh(kit.fin(0.34, 0.52, 0.6), matGold);
+    crest.position.set(0, 0.20, -0.12);
+    crest.rotation.set(-0.3, Math.PI / 2, 0);
+    bones.head.add(crest);
+    added.push(crest);
+  }
+
+  // 5) 手臂：加装发光能量导管
+  for (const [bn, s] of [["armL", 1], ["armR", -1]]) {
+    if (!bones[bn]) continue;
+    for (let i = 0; i < 2; i++) {
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.62, 8), glowCool);
+      tube.position.set(s * 0.10, -0.10 - i * 0.20, 0.16);
+      tube.rotation.z = s * 0.12;
+      bones[bn].add(tube);
+      added.push(tube);
+    }
+  }
+
+  return { added: added.length, materials: { glowHot, glowCool } };
+}
+// =========================================================================
+// 渊龙外观重建（V2）：不依赖 boss 对象字段，直接从场景图定位
+//   - 头部：root 下第一个「含 SphereGeometry 眼灯 + 多个子 Mesh」的 Group
+//   - 脊椎：root 下其余直接子 Group（按 z 距离排序）
+// 重建后把新武器化的发光件交给 boss，保证原有动画引用不失效。
+// =========================================================================
+function ppkRebuildAbyssBody(G, boss) {
+  const THREE = G.THREE;
+  if (!boss) return;
+
+  const root = G.scene.getObjectByName("abyss-leviathan");
+  if (!root) { console.warn("[boss] abyss root not found"); return; }
+
+  const rng = G.rng && G.rng.fork ? G.rng.fork() : Math.random;
+
+  // ---- 收集 root 的直接子 Group（head + segs）----
+  const groups = root.children.filter((o) => o && o.isGroup);
+  if (!groups.length) { console.warn("[boss] no groups under abyss root"); return; }
+
+  // head 是第一个被加入的（也是最靠前/anatomy 上最大的），
+  // 更稳妥的判定：含最多 Mesh 且其中有 Sphere 的那个
+  let headGroup = null;
+  let bestScore = -1;
+  for (const g of groups) {
+    let meshes = 0, spheres = 0;
+    g.traverse((o) => {
+      if (!o.isMesh) return;
+      meshes++;
+      const t = o.geometry && o.geometry.type;
+      if (t && t.indexOf("Sphere") >= 0) spheres++;
+    });
+    const score = meshes * 0.4 + spheres * 3.0;
+    if (score > bestScore) { bestScore = score; headGroup = g; }
+  }
+  const segGroups = groups.filter((g) => g !== headGroup);
+
+  // ---- 1. 换头 ----
+  if (headGroup) {
+    const oldChildren = headGroup.children.slice();
+    for (const ch of oldChildren) headGroup.remove(ch);
+    const built = ppkBuildAbyssHead(G, THREE, { rng });
+    headGroup.add(built.group);
+    headGroup.name = "abyss-head";
+
+    // 把关键节点回写，供原攻击逻辑使用（名字不同则尽量兼容）
+    boss.jaw = built.jaw;
+    boss.coreSphere = built.coreBall;
+    boss.coreShutterL = built.shutterL;
+    boss.coreShutterR = built.shutterR;
+    boss.laserEmitter = built.laserEmitter;
+    boss._abyssCage = built.cageRings;
+    boss._abyssBuilt = built;
+    // 原 boss.laserEmitter 若是 const 闭包引用，这里保留可见性同步
+    if (built.laserEmitter) built.laserEmitter.visible = false;
+    console.log("[boss] abyss head rebuilt (" + oldChildren.length + " old parts replaced)");
+  }
+
+  // ---- 2. 换脊椎节（按到头部距离从近到远排序，保证粗细递减方向正确）----
+  if (segGroups.length) {
+    const headPos = headGroup ? headGroup.position.clone() : new THREE.Vector3();
+    const ordered = segGroups.slice().sort((a, b) => a.position.distanceTo(headPos) - b.position.distanceTo(headPos));
+    for (let i = 0; i < ordered.length; i++) {
+      const g = ordered[i];
+      const k = 1 - i / ordered.length;
+      const r = 0.42 + 0.34 * k;
+      for (let j = g.children.length - 1; j >= 0; j--) g.remove(g.children[j]);
+      const built = ppkBuilAbyssSegment(G, THREE, i, ordered.length, r, 1.18, rng);
+      g.add(built.group);
+      g.userData.__segIdx = i;
+      g.userData.__vents = built.vents;
+    }
+    boss._abyssSegs = ordered;
+    console.log("[boss] abyss segments rebuilt: " + ordered.length);
+  }
+
+  boss.__rebuilt = true;
+}
+// 在两个 Boss 创建完成后，用增强模块替换/叠加外观。
+// 采用「创建后介入」而不是改源码：兼容性最好，且原逻辑（攻击/AI/血量）完全不动。
+function ppkApplyBossUpgrades(G) {
+  if (!G || G.__ppkBossUpgraded) return;
+  G.__ppkBossUpgraded = true;
+
+  // 注意：本函数在 createPPKLevels 里被调用，此时 G.enemies 可能尚未创建
+  // （enemies 模块在 level 之后才 boot）。因此这里轮询等待，而不是立即返回。
+  let tries = 0;
+  function tryInstall() {
+    const enemies = G.enemies;
+    if (!enemies || typeof enemies.spawn !== "function") {
+      if (++tries > 600) { console.warn("[boss] enemies never became available"); return; }
+      return setTimeout(tryInstall, 50);
+    }
+    if (enemies.__ppkBossHooked) return;
+    enemies.__ppkBossHooked = true;
+
+    const origSpawn = enemies.spawn.bind(enemies);
+    enemies.spawn = function (type, pos, opts) {
+      const unit = origSpawn(type, pos, opts);
+      if (!unit) return unit;
+      try {
+        // 泰坦是 "boss"，渊龙是 "boss4"
+        if (type === "boss4") {
+          ppkRebuildAbyssBody(G, unit);
+        } else if (type === "boss") {
+          const rig = unit.rig;
+          if (rig && rig.bones) {
+            const res = ppkUpgradeColossus(G, rig);
+            if (res) console.log("[boss] colossus upgraded: +" + res.added + " parts");
+          }
+        }
+      } catch (e) {
+        console.warn("[boss] upgrade failed", e);
+      }
+      return unit;
+    };
+    console.log("[boss] upgrade hook installed (boss + boss4)");
+  }
+  tryInstall();
+}
+
 function createPPKArsenal(G, basePac9, helpers) {
   const THREE = G.THREE;
   const { Bf, Vv, N_, U_, F_, Fn, fC, zc, Rt, Cn, xr, qo, Fi, Dv, Ii } = helpers;
@@ -7760,6 +9383,8 @@ function createPPKArsenal(G, basePac9, helpers) {
     console.log(`[weapon] ${cfg.name}: ${Math.round(triCount)} tris, ${meshCount} meshes`);
 
     const rng = G.rng && G.rng.fork ? G.rng.fork() : Math.random;
+    let weaponsReadyForInspect = false;
+    let inspectArmedT = 0;
     const st = {
       t: 0, cooldown: 0, prevFire: false, fireBuf: 0, dryDone: false,
       autoReload: -1, reload: null, reloadProgress: 0,
@@ -7767,6 +9392,7 @@ function createPPKArsenal(G, basePac9, helpers) {
       bobPhase: 0, bobAmt: 0, flashT: 0, flashDur: 0.05,
       pumpT: -1, charge: 0, spreadS: cfg.hipSpread,
       wasGround: true, lastVy: 0, meleeT: -1,
+      idleT: 0, inspect: -1,
       kZ: makeSpring(480, 28), kP: makeSpring(340, 24),
       kY: makeSpring(280, 20), kR: makeSpring(280, 20),
       swY: makeSpring(110, 15), swP: makeSpring(110, 15),
@@ -7819,7 +9445,8 @@ function createPPKArsenal(G, basePac9, helpers) {
           cooldown: 0, prevFire: false, fireBuf: 0, dryDone: false,
           autoReload: -1, reload: null, reloadProgress: 0,
           adsLin: 0, adsE: 0, sprintT: 0, finger: 0,
-          flashT: 0, pumpT: -1, charge: 0, meleeT: -1
+          flashT: 0, pumpT: -1, charge: 0, meleeT: -1,
+          idleT: 0, inspect: -1
         });
         for (const k of ["kZ", "kP", "kY", "kR", "swY", "swP", "jY", "jP", "bump"]) { st[k].x = 0; st[k].v = 0; }
         meshGroup.visible = true;
@@ -8115,14 +9742,44 @@ function createPPKArsenal(G, basePac9, helpers) {
         stepSpring(st.kR, 0, dt);
         stepSpring(st.bump, 0, dt);
 
+        // ---- 待机审视动画（复刻原版九式 idle→inspect 曲线）----
+        // 只要有输入就打断并回到待机计时；静止 24s 后触发一次 3.5s 的审视
+        const busy = wantFire || inp.ads || st.reload || st.charge > 0.2 ||
+          (inp.look && (Math.abs(inp.look.dx) + Math.abs(inp.look.dy) > 0.002)) ||
+          st.sprintT > 0.1 || (pl.speed || 0) > 0.25;
+        if (busy) {
+          st.idleT = 0;
+          if (st.inspect >= 0) st.inspect = Math.max(st.inspect, 2.9);
+        } else {
+          st.idleT += dt;
+        }
+        if (!weaponsReadyForInspect) {
+          inspectArmedT += dt;
+          if (inspectArmedT > 1.6) weaponsReadyForInspect = true;
+        }
+        if (st.inspect < 0 && st.idleT > 24 && !st.reload && weaponsReadyForInspect) st.inspect = 0;
+
+        let insLift = 0, insRoll = 0, insW = 0;
+        if (st.inspect >= 0) {
+          const it = (st.inspect += dt);
+          insLift = smooth5(it / 0.5) * (1 - smooth5((it - 1.4) / 0.5));
+          insRoll = smooth5((it - 1.5) / 0.5) * (1 - smooth5((it - 2.8) / 0.5));
+          insW    = smooth5(it / 0.5) * (1 - smooth5((it - 2.9) / 0.5));
+          // 招牌动作：每把枪在审视中段做自己的小动作
+          if (parts.onInspect) { try { parts.onInspect(it, insW); } catch (e) { } }
+          if (it > 3.5) { st.inspect = -1; st.idleT = 0; }
+        }
+        weap.inspecting = st.inspect >= 0;
+        weap.state = st.reload ? "reloading" : (st.inspect >= 0 ? "inspect" : (st.sprintT > 0.5 ? "sprinting" : "idle"));
+
         const hip = cfg.hipPose, adsP = cfg.adsPose;
-        const px = lerp(hip.p[0], adsP.p[0], st.adsE) - 0.035 * st.sprintT - 0.024 * reloadWeight + bobX - st.swY.x * 0.05;
-        const py = lerp(hip.p[1], adsP.p[1], st.adsE) + 0.005 * st.sprintT - 0.055 * reloadWeight + bobY + st.swP.x * 0.045 + st.jY.x + st.bump.x * 0.55;
+        const px = lerp(hip.p[0], adsP.p[0], st.adsE) - 0.035 * st.sprintT - 0.024 * reloadWeight + bobX - st.swY.x * 0.05 - 0.035 * insW;
+        const py = lerp(hip.p[1], adsP.p[1], st.adsE) + 0.005 * st.sprintT - 0.055 * reloadWeight + bobY + st.swP.x * 0.045 + st.jY.x + st.bump.x * 0.55 + 0.045 * insW;
         const pz = lerp(hip.p[2], adsP.p[2], st.adsE) + 0.03 * st.sprintT - 0.015 * reloadWeight + st.kZ.x * 0.52 + meleeZ;
 
-        const rx = hip.r[0] * (1 - st.adsE) - 0.05 * st.sprintT - 0.28 * reloadWeight + st.swP.x + st.jP.x + st.kP.x + st.bump.x * 1.2 + meleeP;
-        const ry = hip.r[1] * (1 - st.adsE) + 0.56 * st.sprintT + 0.22 * reloadWeight + st.swY.x + st.kY.x + meleeY;
-        const rz = hip.r[2] * (1 - st.adsE) + 0.22 * st.sprintT - 0.42 * reloadWeight + st.swY.x * 0.55 + st.kR.x;
+        const rx = hip.r[0] * (1 - st.adsE) - 0.05 * st.sprintT - 0.28 * reloadWeight + st.swP.x + st.jP.x + st.kP.x + st.bump.x * 1.2 + meleeP + 0.30 * insW;
+        const ry = hip.r[1] * (1 - st.adsE) + 0.56 * st.sprintT + 0.22 * reloadWeight + st.swY.x + st.kY.x + meleeY + 0.18 * insW + 0.25 * insRoll;
+        const rz = hip.r[2] * (1 - st.adsE) + 0.22 * st.sprintT - 0.42 * reloadWeight + st.swY.x * 0.55 + st.kR.x - 0.75 * insLift + 0.55 * insRoll + 0.62 * insW;
 
         root.position.set(px, py, pz);
         root.rotation.set(rx, ry, rz, "YXZ");
@@ -8208,6 +9865,7 @@ function createPPKArsenal(G, basePac9, helpers) {
       st.kP.v += cfg.kickP * recScale;
       st.kR.v += (rng() - 0.5) * 2.0 * recScale;
       st.flashT = st.flashDur = 0.045;
+      if (G.skins) { try { G.skins.pulse(0.85, 0.22); } catch (e) { } }
       flash.material.uniforms.uSeed.value = rng() * 100;
       flash.rotation.z = (rng() - 0.5) * 0.5;
       const fs = lerp(1, 0.62, st.adsE);
@@ -9085,17 +10743,23 @@ function createPPKArsenal(G, basePac9, helpers) {
     const pos = gr.pos.clone();
     if (gr.kind === "frag") {
       spawnShockDome(pos, 6.8, 0xff7b29, 0.34);
-      if (G.fx) {
-        G.fx.smoke && G.fx.smoke(pos, { count: 18, size: 1.4, life: 2.2, rise: 1.8, alpha: 0.65 });
-        G.fx.spark && G.fx.spark(pos, new THREE.Vector3(0, 1, 0), { count: 42, speed: 15 });
+      if (G.__ppkBoom) G.__ppkBoom.frag(pos, { radius: 6.8, damage: 175 });
+      else {
+        if (G.fx) {
+          G.fx.smoke && G.fx.smoke(pos, { count: 18, size: 1.4, life: 2.2, rise: 1.8, alpha: 0.65 });
+          G.fx.spark && G.fx.spark(pos, new THREE.Vector3(0, 1, 0), { count: 42, speed: 15 });
+        }
+        if (G.render && G.render.lightPool) G.render.lightPool.flash(pos, 0xff9238, 120, 16, 0.18);
+        if (G.audio) G.audio.play("explosion", { pos, gain: 1.0 });
+        G.combat.explode(pos, 6.8, 175, "player");
       }
-      if (G.render && G.render.lightPool) G.render.lightPool.flash(pos, 0xff9238, 120, 16, 0.18);
-      if (G.audio) G.audio.play("explosion", { pos, gain: 1.0 });
-      G.combat.explode(pos, 6.8, 175, "player");
     } else {
-      spawnShockDome(pos, 8.2, 0x38d9ff, 0.52);
-      if (G.fx && G.fx.spark) G.fx.spark(pos, new THREE.Vector3(0, 1, 0), { count: 38, speed: 13 });
-      if (G.render && G.render.lightPool) G.render.lightPool.flash(pos, 0x38d9ff, 130, 18, 0.25);
+      if (G.__ppkBoom) G.__ppkBoom.emp(pos, { radius: 8.2, damage: 72 });
+      else {
+        spawnShockDome(pos, 8.2, 0x38d9ff, 0.52);
+        if (G.fx && G.fx.spark) G.fx.spark(pos, new THREE.Vector3(0, 1, 0), { count: 38, speed: 13 });
+        if (G.render && G.render.lightPool) G.render.lightPool.flash(pos, 0x38d9ff, 130, 18, 0.25);
+      }
       if (G.audio) G.audio.play("emp_blast", { pos, gain: 1.0 });
       if (G.enemies && G.enemies.empBlast) G.enemies.empBlast(pos, 8.2, 72);
       if (G.player) G.player.addShake(0.28);
@@ -9765,6 +11429,20 @@ function createPPKArsenal(G, basePac9, helpers) {
   // 统一 7 槽位军械库调度中心（[1]-[4] 四式枪械 + [5] 破片手雷 + [6] EMP手雷 + [7] 弧光电弧）
   // =========================================================================
   const slots = [basePac9, shotgun, railgun, smg, fragWeap, empWeap, arcWeap];
+
+  // ---- V6：把所有枪械视图模型注册进皮肤系统 ----
+  (function registerSkins() {
+    if (!G.skins) return;
+    const roots = [];
+    for (const s of slots) {
+      if (s && s.root) roots.push(s.root);
+      // 自定义武器把真正网格藏在 meshGroup 里，root 已包含，无需额外处理
+    }
+    const n = G.skins.register(roots);
+    console.log("[v6] skin registered mats=" + n);
+    // 默认套用火麒麟，让开箱第一眼就有卖相
+    try { G.skins.set("kirin"); } catch (e) { }
+  })();
   let curSlot = 0;
   let lastGunSlot = 0;
   let switchCooldown = 0;
@@ -9774,6 +11452,21 @@ function createPPKArsenal(G, basePac9, helpers) {
   let arsenalVisible = false;
   const baseWalk = G.player.tuning.walk;
   const baseSprint = G.player.tuning.sprint;
+
+  // ---- V6：皮肤切换（8 键循环 / 主菜单也可点） ----
+  G.events.on("input:key", (e) => { });
+  if (G.input && G.input.onKey) {
+    try {
+      G.input.onKey("Digit8", () => {
+        if (!G.skins) return;
+        const s = G.skins.cycle(1);
+        if (G.hud && G.hud.message) G.hud.message("涂装：" + s.label, 1.6);
+        if (G.audio) G.audio.play("ui_click", { gain: 0.8 });
+      });
+    } catch (e) { }
+  }
+  // 暴露到全局，便于菜单 / 控制台调用
+  G.cycleSkin = () => (G.skins ? G.skins.cycle(1) : null);
 
   function isSlotAvailable(idx) {
     if (idx === 4) return grenades.frag > 0;
@@ -14986,6 +16679,24 @@ async function createPPKLevels(G, buildChapter1Fn, helpers) {
     }
   };
 
+  // (面板安装已移至顶层，见文件末尾 ppkInstallSkinPanelWhenReady)
+
+
+  // ---- V6 运行时装配 ----
+  (function ppkBootV6() {
+    try {
+      if (typeof ppkInstallSkinSystem === "function") {
+        G.skins = ppkInstallSkinSystem(G);
+      }
+    } catch (e) { console.warn("[v6] skin install failed", e); }
+    try {
+      if (typeof ppkInstallBoom === "function") G.__ppkBoom = ppkInstallBoom(G);
+    } catch (e) { console.warn("[v6] boom install failed", e); }
+    try {
+      if (typeof ppkApplyBossUpgrades === "function") ppkApplyBossUpgrades(G);
+    } catch (e) { console.warn("[v6] boss upgrade hook failed", e); }
+  })();
+
   const initialCh = (() => {
     const raw = +(G.params && G.params.chapter);
     return (raw === 2 || raw === 3 || raw === 4) ? raw : 1;
@@ -14995,6 +16706,308 @@ async function createPPKLevels(G, buildChapter1Fn, helpers) {
 }
 
 // === ppk 3A大作 V2 战术小地图雷达 + 六槽位手持军械栏 + 换弹进度 + 章节选择与 Boss HUD ===
+// ============================================================================
+// 武器涂装选择面板
+// 在主菜单与暂停页各插入一块「涂装库」区域：缩略预览 + 名称 + 描述 + 一键应用。
+// 缩略图用 canvas 实时绘制该皮肤的配色与纹样特征（与 shader 参数同源），
+// 不需要额外贴图资源，单文件零依赖也能有像样的选择界面。
+// ============================================================================
+function installPPKSkinPanel(G) {
+  // 注意：标志位必须在「真正装好之后」才置位。
+  // 之前写成入口就置 true，一旦首次调用时 G.skins 还没就绪，
+  // 函数会提前 return 却留下已安装的假标志，导致后续所有重试都被短路。
+  if (!G) return;
+  if (G.__ppkSkinPanel) return;
+  const skins = G.skins;
+  if (!skins) return;   // 未就绪：静默返回，等下次重试
+
+  // ---------------------------------------------------------- 缩略图绘制
+  // 每款皮肤画一块「枪身剖面」：底色 + 纹样 + 高光，直观体现差异
+  function drawThumb(canvas, skinKey) {
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    if (skinKey === "kirin") {
+      grad.addColorStop(0, "#3a0608");
+      grad.addColorStop(0.45, "#7a1216");
+      grad.addColorStop(1, "#2a0406");
+    } else if (skinKey === "storm") {
+      grad.addColorStop(0, "#0c1622");
+      grad.addColorStop(0.5, "#2a3d52");
+      grad.addColorStop(1, "#0a121c");
+    } else if (skinKey === "magma") {
+      grad.addColorStop(0, "#0a0809");
+      grad.addColorStop(0.5, "#1d1416");
+      grad.addColorStop(1, "#080607");
+    } else {
+      grad.addColorStop(0, "#15181b");
+      grad.addColorStop(1, "#0b0d0f");
+    }
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // ---- 纹样层 ----
+    if (skinKey === "kirin") {
+      // 六棱鳞甲 + 鎏金描边
+      const s = 11;
+      for (let row = 0; row * s * 0.87 < H + s; row++) {
+        for (let col = 0; col * s * 1.5 < W + s; col++) {
+          const cx = col * s * 1.5 + (row % 2 ? s * 0.75 : 0);
+          const cy = row * s * 0.87;
+          ctx.beginPath();
+          for (let k = 0; k < 6; k++) {
+            const a = Math.PI / 3 * k - Math.PI / 6;
+            const px = cx + Math.cos(a) * s * 0.62;
+            const py = cy + Math.sin(a) * s * 0.62;
+            k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+          }
+          ctx.closePath();
+          ctx.strokeStyle = "rgba(214, 160, 48, 0.62)";
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+          // 鳞缝渗光
+          if ((row * 7 + col * 3) % 5 === 0) {
+            ctx.fillStyle = "rgba(255, 120, 30, 0.30)";
+            ctx.fill();
+          }
+        }
+      }
+      // 龙脊中轴高光
+      const rg = ctx.createLinearGradient(0, H * 0.42, 0, H * 0.58);
+      rg.addColorStop(0, "rgba(255,190,80,0)");
+      rg.addColorStop(0.5, "rgba(255,205,110,0.85)");
+      rg.addColorStop(1, "rgba(255,190,80,0)");
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, H * 0.42, W, H * 0.16);
+    } else if (skinKey === "storm") {
+      // 电路网格 + 电弧
+      ctx.strokeStyle = "rgba(80, 210, 255, 0.42)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 14) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 14) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      const sg = ctx.createLinearGradient(0, H * 0.44, 0, H * 0.56);
+      sg.addColorStop(0, "rgba(120,230,255,0)");
+      sg.addColorStop(0.5, "rgba(160,240,255,0.9)");
+      sg.addColorStop(1, "rgba(120,230,255,0)");
+      ctx.fillStyle = sg;
+      ctx.fillRect(0, H * 0.44, W, H * 0.12);
+    } else if (skinKey === "magma") {
+      // 岩壳裂纹 + 熔缝
+      ctx.strokeStyle = "rgba(255, 110, 30, 0.85)";
+      ctx.lineWidth = 1.6;
+      for (let i = 0; i < 7; i++) {
+        ctx.beginPath();
+        let x = Math.random() * W, y = 0;
+        ctx.moveTo(x, y);
+        while (y < H) {
+          x += (Math.random() - 0.5) * 26;
+          y += 8 + Math.random() * 10;
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(0,0,0,0.28)";
+      for (let i = 0; i < 16; i++) {
+        ctx.fillRect(Math.random() * W, Math.random() * H, 8 + Math.random() * 14, 5 + Math.random() * 8);
+      }
+    } else {
+      // 出厂：细密磨砂 + 轻微划痕
+      ctx.fillStyle = "rgba(255,255,255,0.05)";
+      for (let i = 0; i < 240; i++) ctx.fillRect(Math.random() * W, Math.random() * H, 1, 1);
+      ctx.strokeStyle = "rgba(255,255,255,0.07)";
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        ctx.moveTo(Math.random() * W, Math.random() * H);
+        ctx.lineTo(Math.random() * W, Math.random() * H);
+        ctx.stroke();
+      }
+    }
+
+    // ---- 顶部高光条（模拟金属反射）----
+    const hl = ctx.createLinearGradient(0, 0, 0, H * 0.30);
+    hl.addColorStop(0, "rgba(255,255,255,0.16)");
+    hl.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = hl;
+    ctx.fillRect(0, 0, W, H * 0.30);
+  }
+
+  function buildPanel(title, hint) {
+    const wrap = document.createElement("div");
+    wrap.className = "skin-panel";
+
+    const head = document.createElement("div");
+    head.className = "skin-head";
+    head.innerHTML = '<span class="skin-title">' + title + '</span>' +
+      '<span class="skin-hint">' + hint + '</span>';
+
+    const grid = document.createElement("div");
+    grid.className = "skin-grid";
+
+    const cards = [];
+    for (const sk of skins.list()) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "skin-card";
+      card.dataset.skin = sk.key;
+
+      const cv = document.createElement("canvas");
+      cv.width = 132; cv.height = 62;
+      cv.className = "skin-thumb";
+      drawThumb(cv, sk.key);
+
+      const name = document.createElement("span");
+      name.className = "skin-name";
+      name.textContent = sk.label;
+
+      const desc = document.createElement("span");
+      desc.className = "skin-desc";
+      desc.textContent = sk.desc;
+
+      card.append(cv, name, desc);
+      card.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        skins.set(sk.key);
+        if (G.audio) { try { G.audio.play("ui_click", { gain: 0.85 }); } catch (e) { } }
+        sync();
+      });
+      grid.appendChild(card);
+      cards.push({ card, key: sk.key });
+    }
+
+    wrap.append(head, grid);
+
+    function sync() {
+      const cur = skins.current.key;
+      for (const { card, key } of cards) {
+        card.classList.toggle("on", key === cur);
+      }
+    }
+    sync();
+    G.events.on("weapon:skin", sync);
+    return wrap;
+  }
+
+  // -------------------------------------------------- 主菜单结构：上半部可滚、底部常驻
+  // 把 .m-title-main 规范成两块：
+  //   .m-hero（标题 / 简介 / 选关 / 难度 —— 矮窗口时自己滚动）
+  //   .m-dock（涂装库 + 开始行动 —— flex:none，永远留在可视区）
+  // 幂等：可重复调用；后插入的普通块会被重新归入 .m-hero。
+  function ensureMenuLayout(titleMain, panel) {
+    if (!titleMain) return null;
+    const actions = titleMain.querySelector(":scope > .m-actions");
+
+    let hero = titleMain.querySelector(":scope > .m-hero");
+    if (!hero) {
+      hero = document.createElement("div");
+      hero.className = "m-hero";
+      titleMain.insertBefore(hero, titleMain.firstChild);
+    }
+    let dock = titleMain.querySelector(":scope > .m-dock");
+    if (!dock) {
+      dock = document.createElement("div");
+      dock.className = "m-dock";
+      titleMain.appendChild(dock);
+    }
+
+    // 面板与按钮放进 dock（面板在前 = 按钮上方）
+    if (panel && panel.parentElement !== dock) dock.insertBefore(panel, dock.firstChild);
+    if (actions && actions.parentElement !== dock) dock.appendChild(actions);
+    if (panel && actions && panel.nextElementSibling !== actions) dock.insertBefore(panel, actions);
+
+    // 其余普通块归入 hero，跟着一起滚动
+    for (const el of Array.from(titleMain.children)) {
+      if (el === hero || el === dock) continue;
+      hero.appendChild(el);
+    }
+    return { hero, dock };
+  }
+
+  // -------------------------------------------------- 插入到主菜单
+  // 位置：置于「开始行动」按钮上方（用户指定的主视觉区），默认展开。
+  // 之前放在按钮下方 + 默认折叠，导致矮视口下被挤出屏幕且像一个分隔线。
+  const menuRoot = document.querySelector(".menu") || document.body;
+  const titleMain = menuRoot.querySelector(".m-title-main");
+  if (titleMain) {
+    const panel = buildPanel("涂装库 · WEAPON FINISH", "点击卡片立即换装 · 战斗中按 8 键快切");
+    // 默认展开，不再默认折叠
+    const head = panel.querySelector(".skin-head");
+    head.style.cursor = "pointer";
+    head.setAttribute("role", "button");
+    head.setAttribute("tabindex", "0");
+    head.setAttribute("aria-expanded", "true");
+
+    const toggle = (open) => {
+      const willOpen = open === undefined ? panel.classList.contains("skin-collapsed") : open;
+      panel.classList.toggle("skin-collapsed", !willOpen);
+      head.setAttribute("aria-expanded", String(willOpen));
+    };
+    head.addEventListener("click", () => toggle());
+    head.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); toggle(); }
+    });
+
+    // 当前涂装摘要（展开时也显示，方便一眼确认）
+    const badge = document.createElement("span");
+    badge.className = "skin-cur";
+    panel.insertBefore(badge, head);
+    const syncBadge = () => { badge.textContent = "当前：" + skins.current.label; };
+    syncBadge();
+    G.events.on("weapon:skin", syncBadge);
+
+    // ← 关键改动：插到 m-actions 之前（按钮上方），并让面板+按钮常驻底部
+    ensureMenuLayout(titleMain, panel);
+
+    // 暴露给菜单扩展脚本：之后插入的选关/难度条要进 hero，不能挤到 dock 下面
+    G.__ppkMenuLayout = () => ensureMenuLayout(titleMain, panel);
+
+    // 标题菜单的纵向滚动/对齐交给 _menu_fit.css 的 `align-items: safe flex-end`。
+    // 这里不要再写内联 alignItems = "flex-end"：内联样式优先级高于样式表，
+    // 会把 safe 回退覆盖掉，矮窗口下顶部内容仍会被甩到视口上方且滚不回来。
+    const titleScreen = menuRoot.querySelector(".m-title");
+    if (titleScreen) {
+      titleScreen.style.overflowY = "auto";
+      titleScreen.style.overflowX = "hidden";
+      titleScreen.style.scrollbarGutter = "stable";
+    }
+    console.log("[skin] panel installed above actions (expanded)");
+  }
+
+  // -------------------------------------------------- 插入到暂停页
+  const pauseScreen = menuRoot.querySelector('[data-s="pause"]') || menuRoot.querySelector(".m-pause");
+  if (pauseScreen) {
+    const box = pauseScreen.querySelector(".m-actions") || pauseScreen;
+    const panel = buildPanel("涂装库 · 随时换装", "切换后立即生效");
+    box.appendChild(panel);
+    console.log("[skin] panel installed in pause menu");
+  }
+
+  // 全部装好之后才置位，避免"假安装"短路后续重试
+  G.__ppkSkinPanel = true;
+  G.events.emit("skin:panel-ready", {});
+}
+
+// ============================================================================
+// 顶层：涂装面板安装调度
+// 明确的执行顺序保证：DOM 已存在 -> 皮肤系统已建 -> 才安装面板。
+// 不依赖 setTimeout（无头/后台标签会被节流），改由 hud 每帧调用一次，
+// 装好后自动空转（__ppkSkinPanel 置位即返回）。
+// ============================================================================
+function ppkInstallSkinPanelWhenReady(G) {
+  if (!G || G.__ppkSkinPanel) return true;
+  if (!G.skins) return false;
+  if (!document.querySelector(".m-title-main")) return false;
+  try {
+    installPPKSkinPanel(G);
+  } catch (e) {
+    console.error("[skin] panel install threw: " + (e && e.stack || e));
+    return false;
+  }
+  return !!G.__ppkSkinPanel;
+}
+
 function upgradePPKHud(G, baseHud) {
   const root = baseHud.root;
   const el = (tag, cls, html) => {
@@ -15347,16 +17360,107 @@ function upgradePPKHud(G, baseHud) {
     ctx.restore();
   }
 
-  // 2. 右下角六槽位武器与手持投掷物快捷栏 ([1]-[4] 四式枪械 + [5] 破片手雷 + [6] EMP手雷)
+  // ---------------------------------------------------------------------------
+  // 右下角军械栏（图形 UI）
+  // 原版：7 个横向文字标签 "1九式步枪 | 2破浪霰弹 | ..."，实测固定 731px，
+  //       在 1348px 视口上占 54.2%，横向铺满半个屏幕。
+  // 现在：等宽图标卡（46px×40px），名称只在选中项上方以气泡显示，
+  //       整条约 346px，占 2K 屏 13.6%。图标为内联 SVG，零外部资源。
+  //
+  // 图标画法统一采用「侧视轮廓 + 关键特征」，viewBox 统一 0 0 32 20，
+  // 保证 7 张图视觉重量接近、基线对齐。
+  // ---------------------------------------------------------------------------
+  const ARSENAL_ICONS = {
+    // 突击步枪：长枪管 + 上导轨 + 弯弹匣 + 枪托 + 握把
+    rifle:
+      '<path d="M2 8h4"/>' +                              // 枪托延伸
+      '<path d="M6 6h14v3H6z"/>' +                        // 机匣
+      '<path d="M20 7h9v1.6h-9z"/>' +                     // 枪管
+      '<path d="M6 6V4.6h6V6"/>' +                        // 上导轨/提把
+      '<path d="M9 9v3.4l-1.6 4h3.4l1.4-4V9"/>' +         // 弹匣
+      '<path d="M16 9v2.6l-1.2 2.4h2.8l.9-2.4V9"/>',      // 握把
+
+    // 霰弹枪：粗管 + 下挂管状弹仓 + 泵动护木 + 折托
+    shotgun:
+      '<path d="M3 7h2.5l2-1.5H8L8.5 7"/>' +              // 枪托
+      '<path d="M8.5 6.4h16v2.4h-16z"/>' +                // 机匣
+      '<path d="M24.5 6.9h6v1.4h-6z"/>' +                 // 上枪管
+      '<path d="M24.5 8.9h6v1.3h-6z"/>' +                 // 下弹仓管
+      '<path d="M14 9.4h5.5v2.2H14z"/>' +                 // 泵动护木
+      '<path d="M10 9v4h2.4V9"/>',                        // 握把
+
+    // 电磁狙击：超长枪管 + 高倍镜筒 + 两脚架（横向拉满，与冲锋枪明显区分）
+    railgun:
+      '<path d="M1.5 8.6h6v2.2h-6z"/>' +                  // 枪托
+      '<path d="M7.5 7h11v3.6h-11z"/>' +                  // 机匣
+      '<path d="M18.5 8.2h12v1.6h-12z"/>' +               // 长枪管
+      '<path d="M11.5 7V4.4h6V7"/>' +                     // 镜架
+      '<ellipse cx="14.5" cy="5.6" rx="4.6" ry="2.4"/>' + // 高倍镜筒（椭圆）
+      '<path d="M10 10.6l-2.2 4.6M17 10.6l2.2 4.6"/>' +   // 两脚架张开
+      '<path d="M19.6 6.4h2.2v1.8h-2.2z"/>' +             // 制退器
+      '<path d="M27 8.2h3.5v1.6H27z"/>',                  // 枪口延长
+
+    // 冲锋枪：极短机匣 + 长直弹匣（竖向特征最强，一眼区分狙击）
+    smg:
+      '<path d="M2 8.4h3.4v2.4H2z"/>' +                   // 折叠托
+      '<path d="M5.4 7.4h10v3.4h-10z"/>' +                // 短机匣
+      '<path d="M15.4 8.2h6.6v1.6h-6.6z"/>' +             // 枪管
+      '<path d="M7.4 10.8v6.8h2.8v-6.8z"/>' +             // 长直弹匣（显著下垂）
+      '<path d="M12.4 10.8v3h2.4v-3z"/>' +                // 握把
+      '<path d="M8 7.4V5.8h3.4v1.6"/>',                   // 顶部瞄具
+
+    // 破片手雷：卵形雷体 + 顶部引信 + 保险压杆
+    frag:
+      '<ellipse cx="15" cy="12.6" rx="5.4" ry="6.4"/>' +
+      '<path d="M13 6.2h4v2.6h-4z"/>' +                    // 引信
+      '<path d="M15 4.2v2"/>' +                            // 拉环柄
+      '<circle cx="16.6" cy="3.6" r="1.5"/>' +             // 拉环
+      '<path d="M10.4 9.6h9.2M10.4 15.6h9.2"/>' +          // 刻痕
+      '<path d="M12.6 12.6h4.8"/>',                        // 中缝
+
+    // EMP 脉冲手雷：雷体 + 四周电弧 + 中心闪电
+    emp:
+      '<ellipse cx="15" cy="12.6" rx="5.4" ry="6.4"/>' +
+      '<path d="M13 6.2h4v2.6h-4z"/>' +
+      '<path d="M12.4 12.2l2.2-2.6v3l2.2-2.6"/>' +         // 中心闪电
+      '<path d="M21.4 9.4l2.6-1M21.8 12.6h2.8M21.4 15.8l2.6 1"/>' +  // 右电弧
+      '<path d="M8.6 9.4l-2.6-1M8.2 12.6H5.4M8.6 15.8l-2.6 1"/>',    // 左电弧
+
+    // 弧光投射器：发射器主机 + 双叉电极 + 电弧
+    arc:
+      '<path d="M2 9.6h3v2.6H2z"/>' +                      // 尾托
+      '<path d="M5 8.2h10.5v4.4H5z"/>' +                   // 主机
+      '<path d="M15.5 9.2l4.5-1.6v4.8l-4.5-1.6z"/>' +      // 喇叭口
+      '<path d="M20 7.6l3-1.6M20 11.6l3 1.6"/>' +          // 双叉
+      '<path d="M23 9.6l2.5-.6-1.4 2 2.4-.5"/>' +          // 电弧
+      '<path d="M7.6 12.6v3.6h2.6v-3.6z"/>'                // 握把
+  };
+
+  function arsenalSlotHTML(key, idx, opts) {
+    const o = opts || {};
+    const cls = ["h-slot"];
+    if (o.on) cls.push("on");
+    if (o.gren) cls.push("gren");
+    if (o.emp) cls.push("emp");
+    if (o.arc) cls.push("arc");
+    if (o.locked) cls.push("locked");
+    return '<div class="' + cls.join(" ") + '" data-s="' + idx + '" title="' + o.alt + '">' +
+      '<kbd>' + (idx + 1) + '</kbd>' +
+      '<svg class="s-ico" viewBox="0 0 32 20" aria-hidden="true">' + ARSENAL_ICONS[key] + '</svg>' +
+      '<span class="s-name">' + o.label + '</span>' +
+      (o.gren ? '<i class="gcnt">×' + (o.count || 0) + '</i>' : '') +
+      '</div>';
+  }
+
   const arsenalBox = el("div", "h-arsenal");
   const slotsRow = el("div", "h-slots", [
-    '<div class="h-slot on" data-s="0"><kbd>1</kbd><span>九式步枪</span></div>',
-    '<div class="h-slot" data-s="1"><kbd>2</kbd><span>破浪霰弹</span></div>',
-    '<div class="h-slot" data-s="2"><kbd>3</kbd><span>惊雷电磁狙</span></div>',
-    '<div class="h-slot" data-s="3"><kbd>4</kbd><span>蜂群冲锋枪</span></div>',
-    '<div class="h-slot gren" data-s="4"><kbd>5</kbd><span>破片雷</span><i class="gcnt">×3</i></div>',
-    '<div class="h-slot gren emp" data-s="5"><kbd>6</kbd><span>EMP雷</span><i class="gcnt">×2</i></div>',
-    '<div class="h-slot arc locked" data-s="6"><kbd>7</kbd><span>弧光电弧</span></div>'
+    arsenalSlotHTML("rifle", 0, { on: true, label: "九式步枪", alt: "1 · ppk九式突击步枪" }),
+    arsenalSlotHTML("shotgun", 1, { label: "破浪霰弹", alt: "2 · ppk破浪十二式霰弹枪" }),
+    arsenalSlotHTML("railgun", 2, { label: "惊雷电磁狙", alt: "3 · ppk惊雷式电磁轨道狙击枪" }),
+    arsenalSlotHTML("smg", 3, { label: "蜂群冲锋枪", alt: "4 · ppk蜂群式冲锋手枪" }),
+    arsenalSlotHTML("frag", 4, { gren: true, label: "破片雷", alt: "5 · 九七式破片高爆手雷", count: 3 }),
+    arsenalSlotHTML("emp", 5, { gren: true, emp: true, label: "EMP雷", alt: "6 · 惊蛰式 EMP 脉冲手雷", count: 2 }),
+    arsenalSlotHTML("arc", 6, { arc: true, locked: true, label: "弧光电弧", alt: "7 · 实验型弧光投射器（未解锁）" })
   ].join(""));
   const slotEls = [...slotsRow.querySelectorAll(".h-slot")];
   const fragCntBadge = slotEls[4].querySelector(".gcnt");
@@ -15487,6 +17591,11 @@ function upgradePPKHud(G, baseHud) {
       const scoped = !!(w.isScopeZoom && G.player && G.player.alive);
       scopeOverlay.classList.toggle("on", scoped);
     }
+
+    // V6: 皮肤脉动 + 爆炸特效池
+    try { if (G.skins) { G.skins.update(dt); G.skins.tickBoost(dt); } } catch (e) { }
+    try { if (G.__ppkBoom) G.__ppkBoom.update(dt); } catch (e) { }
+    try { if (!G.__ppkSkinPanel) ppkInstallSkinPanelWhenReady(G); } catch (e) { }
 
     // 顶部 Boss 状态栏实时刷新
     const boss = G.enemies && G.enemies.getBoss ? G.enemies.getBoss() : null;
@@ -15775,8 +17884,16 @@ function installPPKMenuExtensions(G) {
       '  <span class="ch-d">潜入海沟底部的地热环站，切断涡轮机房、中控塔与冷却泵站三处供给锁，拾取实验型弧光投射器，猎杀盘踞熔核上空的机械海蛇“ppk渊龙”！</span>',
       '</button>'
     ].join("");
-    titleMain.insertBefore(chWrap, actionsEl);
-    titleMain.insertBefore(createQuickDiffBar("作战难度 · 战中按 ESC 可随时自由调节", false), actionsEl);
+    // V8.1：涂装库与「开始行动」常驻底部 dock，选关/难度条放进可滚动的 hero
+    const insertHost = titleMain.querySelector(":scope > .m-hero") || titleMain;
+    const quickBar = createQuickDiffBar("作战难度 · 战中按 ESC 可随时自由调节", false);
+    if (insertHost === titleMain) {
+      titleMain.insertBefore(chWrap, actionsEl);
+      titleMain.insertBefore(quickBar, actionsEl);
+    } else {
+      insertHost.appendChild(chWrap);
+      insertHost.appendChild(quickBar);
+    }
 
     const syncChapterUI = (ch) => {
       selectedCh = ch;

@@ -43,7 +43,9 @@ A complete shooter campaign packed into one HTML file: four selectable chapters,
 | 👹 | **Multi-phase bosses** | Destructible parts, shield breaks, forced core exposure, enrage phases. |
 | 🗺️ | **Live tactical radar** | Rotating minimap with threat typing and off-screen edge indicators. |
 | 🎚️ | **Free difficulty tuning** | Five presets, five continuous sliders, plus a god-mode toggle. |
+| 🎨 | **Weapon finishes** | Factory, Kirin, Storm and Magma procedural skins with emissive pulse; pick them from the title screen or swap mid-combat. |
 | 🕹️ | **Input parity** | Keyboard & mouse, gamepad, and touch, all from the same build. |
+| 🖼️ | **Graphical arsenal bar** | Icon slots with keycap badges and grenade counters, replacing a 731 px wall of text with a compact 346 px strip. |
 | 📦 | **Zero dependencies** | One `index.html`. No CDN, no build step, no network calls at runtime. |
 
 ---
@@ -88,6 +90,7 @@ Every weapon is procedurally modelled in code — chamfered receivers, milled Pi
 | Switch weapon & grenade | `1`–`6` or `Mouse Wheel` | Arsenal bar |
 | Quick-draw grenade · Swap frag/EMP | `G` / `Q` (or `T`) | — |
 | Reload · Melee · Interact | `R` · `F` · `E` | — |
+| Cycle weapon finish | `8` | Finish panel on the title screen |
 | Minimap zoom · Pause / difficulty | `M` · `Esc` | — |
 
 ---
@@ -108,11 +111,10 @@ Every weapon is procedurally modelled in code — chamfered receivers, milled Pi
 
 - [x] Four-chapter campaign with per-chapter bosses
 - [x] Seven-slot arsenal, dual-mode grenades, difficulty tuning
-- [ ] **Weapon finish system** — Kirin / Storm / Magma procedural skins with emissive pulse
-- [ ] **Spawn shield** — brief invulnerability on chapter entry
-- [ ] Cosmetic finish selector panel
-
-> The three unchecked items are implemented and verified in the local build; they ship in the next release.
+- [x] **Weapon finish system** — Kirin / Storm / Magma procedural skins with emissive pulse
+- [x] **Spawn shield** — brief invulnerability on chapter entry
+- [x] Cosmetic finish selector panel — collapses alongside the deploy button
+- [x] Graphical arsenal bar — icon slots instead of text labels
 
 ---
 
